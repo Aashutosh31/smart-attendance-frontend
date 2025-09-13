@@ -11,14 +11,16 @@ import FacultyDashboard from "./components/Dashboard.jsx";
 import StudentDashboard from "./components/StudentDashboard.jsx";
 import DashboardOverview from "./components/DashboardOverview.jsx";
 import CoursesPage from "./components/CoursesPage.jsx";
-// ... other page imports
+import AnalyticsPage from "./components/AnalyticsPage.jsx";
+import SettingsPage from "./components/SettingsPage.jsx";
 
 import "./index.css";
 
 function App() {
   return (
     <>
-     <ToastContainer
+      {/* This container is for the toast pop-up notifications */}
+      <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
@@ -31,35 +33,42 @@ function App() {
         theme="light"
       />
 
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Router>
+        <Routes>
+          {/* --- PUBLIC ROUTES --- */}
+          {/* These pages can be seen by anyone, logged in or not. */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* --- FACULTY ROUTES --- */}
-        <Route element={<ProtectedRoute allowedRoles={['faculty']} />}>
-          <Route path="/" element={<FacultyDashboard />}>
-            <Route index element={<DashboardOverview />} />
-            <Route path="courses" element={<CoursesPage />} />
-            {/* ... other faculty pages */}
+          {/* --- FACULTY ROUTES --- */}
+          {/* This entire section is protected. Only users with the 'faculty' role can access it. */}
+          {/* The main URL ("/") is the faculty's home. */}
+          <Route element={<ProtectedRoute allowedRoles={['faculty']} />}>
+            <Route path="/" element={<FacultyDashboard />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="courses" element={<CoursesPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* --- ADMIN ROUTES --- */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
-          {/* ... other admin pages */}
-        </Route>
+          {/* --- ADMIN ROUTES --- */}
+          {/* This section is protected. Only users with the 'admin' role can access it. */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            {/* You can add more admin-specific pages here later */}
+          </Route>
 
-        {/* --- STUDENT ROUTES --- */}
-        <Route element={<ProtectedRoute allowedRoles={['student']} />}>
-          <Route path="/student" element={<StudentDashboard />} />
-          {/* ... other student pages */}
-        </Route>
-
-      </Routes>
-    </Router>
+          {/* --- STUDENT ROUTES --- */}
+          {/* This section is protected. Only users with the 'student' role can access it. */}
+          {/* Note: This is for the web version. The React Native app will use the same logic. */}
+          <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+            <Route path="/student" element={<StudentDashboard />} />
+            {/* You can add more student-specific pages here later */}
+          </Route>
+          
+        </Routes>
+      </Router>
     </>
   );
 }
