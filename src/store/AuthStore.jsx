@@ -1,22 +1,27 @@
 import { create } from 'zustand';
 
-// This is your central store. It holds the user's token and role.
 export const useAuthStore = create((set) => ({
   // State
   token: localStorage.getItem('authToken') || null,
   role: localStorage.getItem('userRole') || null,
   isAuthenticated: !!localStorage.getItem('authToken'),
+  isVerified: false, // <-- NEW: Track if faculty has passed facial scan
 
-  // Actions (functions to change the state)
+  // Actions
   login: (token, role) => {
     localStorage.setItem('authToken', token);
     localStorage.setItem('userRole', role);
-    set({ token, role, isAuthenticated: true });
+    // On login, they are authenticated but NOT yet verified
+    set({ token, role, isAuthenticated: true, isVerified: false });
   },
+
+  // NEW: Action to call after a successful face scan
+  setVerified: () => set({ isVerified: true }),
 
   logout: () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userRole');
-    set({ token: null, role: null, isAuthenticated: false });
+    // Reset everything on logout
+    set({ token: null, role: null, isAuthenticated: false, isVerified: false });
   },
 }));

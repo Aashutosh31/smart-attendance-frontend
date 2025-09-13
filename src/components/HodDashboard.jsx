@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/AuthStore';
-import { Shield, Users, BookOpen, LogOut } from 'lucide-react';
+import { UserCheck, Users, BarChart3, LogOut } from 'lucide-react';
 
-const AdminDashboard = () => {
+const HodDashboard = () => {
   const navigate = useNavigate();
   const logoutAction = useAuthStore((state) => state.logout);
 
@@ -13,23 +13,21 @@ const AdminDashboard = () => {
   };
 
   const navItems = [
-    { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
-    { to: "/admin/manage-students", name: "Manage Students", icon: Users },
-    { to: "/admin/manage-courses", name: "Manage Courses", icon: BookOpen },
+    { to: "/hod/faculty-attendance", name: "Faculty Attendance", icon: UserCheck },
+    { to: "/hod/student-reports", name: "Student Reports", icon: Users },
   ];
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-700 flex items-center space-x-3">
-          <Shield className="text-yellow-400" />
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+       <aside className="w-64 bg-gray-900 text-white flex flex-col">
+        <div className="p-6 border-b border-gray-700">
+          <h1 className="text-2xl font-bold">HOD Portal</h1>
         </div>
         <nav className="flex-1 mt-6">
           <ul className="space-y-2 px-4">
             {navItems.map(item => (
               <li key={item.name}>
-                <NavLink to={item.to} className={({isActive}) => `flex items-center p-3 rounded-lg ${isActive ? 'bg-yellow-600 text-white' : 'hover:bg-gray-800'}`}>
+                <NavLink to={item.to} className={({isActive}) => `flex items-center p-3 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'hover:bg-gray-800'}`}>
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.name}
                 </NavLink>
@@ -51,4 +49,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default HodDashboard;
