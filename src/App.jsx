@@ -26,6 +26,7 @@ import ManageStudentsPage from "./components/ManageStudentsPage.jsx";
 import AdminAnalyticsPage from "./components/AdminAnalyticsPage.jsx";
 import CoordinatorAttendancePage from "./components/CoordinatorAttendancePage.jsx";
 import AttendanceSessionPage from "./components/AttendanceSessionPage.jsx";
+import ManageCoursesPage from "./components/ManageCoursesPage.jsx";
 
 // Placeholders for pages you will build later
 const CoordinatorAnalytics = () => <div>Coordinator Analytics Page</div>;
@@ -61,6 +62,7 @@ function App() {
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
               <Route path="manage-students" element={<ManageStudentsPage />} />
                <Route path="analytics" element={<AdminAnalyticsPage />} />
+               <Route path="manage-courses" element={<ManageCoursesPage />} />
             </Route>
           {/* </Route> */}
 
