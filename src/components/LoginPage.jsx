@@ -13,15 +13,17 @@ const LoginPage = () => {
   const { login: loginAction, isAuthenticated, role } = useAuthStore();
   
   // This effect handles redirection after the state has been updated
-  useEffect(() => {
+  // ... inside the useEffect hook ...
+useEffect(() => {
     if (isAuthenticated) {
-      // Redirect based on the role stored in Zustand
       if (role === 'admin') navigate('/admin');
-      else if (role === 'student') navigate('/student');
       else if (role === 'hod') navigate('/hod');
-      else navigate('/verify'); // Faculty goes to verification
+      // --- ADDED THIS LINE ---
+      else if (role === 'program_coordinator') navigate('/coordinator');
+      else if (role === 'student') navigate('/student');
+      else navigate('/verify'); // Faculty
     }
-  }, [isAuthenticated, role, navigate]);
+}, [isAuthenticated, role, navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
