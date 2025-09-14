@@ -27,9 +27,8 @@ import AdminAnalyticsPage from "./components/AdminAnalyticsPage.jsx";
 import CoordinatorAttendancePage from "./components/CoordinatorAttendancePage.jsx";
 import AttendanceSessionPage from "./components/AttendanceSessionPage.jsx";
 import ManageCoursesPage from "./components/ManageCoursesPage.jsx";
+import CoordinatorAnalytics from "./components/CoordinatorAnalytics.jsx";
 
-// Placeholders for pages you will build later
-const CoordinatorAnalytics = () => <div>Coordinator Analytics Page</div>;
 
 import "./index.css";
 
