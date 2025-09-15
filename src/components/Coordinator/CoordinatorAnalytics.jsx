@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
 import { BarChart, Users, UserX, TrendingUp, AlertTriangle, Download } from 'lucide-react';
 

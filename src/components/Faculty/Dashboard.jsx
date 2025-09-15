@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 // Import NavLink for smart navigation, Outlet for nested pages, and useNavigate for redirection
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 // Import the Zustand store to get the logout action
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 // Import all the icons you need
 import { Home, BookOpen, BarChart3, Settings, Bell, ChevronDown } from 'lucide-react';
+//import theme store
+import { useThemeStore } from '../../store/ThemeStore.jsx';
 
 const FacultyDashboard = () => {
+   const { theme } = useThemeStore(); // Get the current theme
+
+  // Add a useEffect to apply the theme to the <html> tag
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   
   // Get the logout action from your Zustand store

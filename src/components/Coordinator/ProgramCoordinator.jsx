@@ -1,9 +1,19 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { UserPlus, BarChart3, Users, LogOut, BookOpen } from 'lucide-react'; // Added BookOpen
+import { useThemeStore } from '../../store/ThemeStore.jsx';
 
 const ProgramCoordinatorDashboard = () => {
+   const { theme } = useThemeStore(); // 2. Get the current theme
+
+  // 3. Add a useEffect to apply the theme to the <html> tag
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
   const navigate = useNavigate();
   const logoutAction = useAuthStore((state) => state.logout);
 

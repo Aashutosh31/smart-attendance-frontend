@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // Import useCallback
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { toast } from 'react-toastify';
 import { Camera, ShieldCheck, Loader } from 'lucide-react';
 
@@ -12,8 +12,8 @@ const HodVerificationPage = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Function to start the camera feed
-  const startCamera = async () => {
+  // Wrap startCamera in useCallback
+  const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
@@ -24,7 +24,7 @@ const HodVerificationPage = () => {
       console.error("Error accessing camera:", err);
       toast.error("Could not access the camera. Please check permissions.");
     }
-  };
+  }, []); // Empty dependency array as it doesn't depend on any props or state
 
   useEffect(() => {
     startCamera();
@@ -33,8 +33,9 @@ const HodVerificationPage = () => {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [startCamera]); // Add startCamera to the dependency array
 
+  // ... rest of the component remains the same
   const handleVerification = async () => {
     if (!isCameraReady) {
       toast.error('Camera is not ready.');
@@ -53,8 +54,6 @@ const HodVerificationPage = () => {
     const imageData = canvas.toDataURL('image/jpeg');
 
     try {
-      // --- BACKEND INTEGRATION ---
-      // Backend team needs to create this endpoint for HODs.
       const response = await fetch('http://localhost:8000/api/hod/verify-face', {
         method: 'POST',
         headers: {

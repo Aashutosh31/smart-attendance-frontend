@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'; // 1. Import useCallback
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { Plus, User, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 

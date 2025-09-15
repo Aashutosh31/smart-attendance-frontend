@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { BarChart, Clock, Users, Download } from 'lucide-react';
 
 // A simple placeholder for a chart

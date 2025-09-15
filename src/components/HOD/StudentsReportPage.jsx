@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { User, MoreHorizontal, Filter, Download } from 'lucide-react';
 
 const TableSkeleton = () => (

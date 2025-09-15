@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import React, { useState, useEffect } from 'react'; // Import useEffect
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { toast } from 'react-toastify';
 import { UserPlus } from 'lucide-react';
 
@@ -8,10 +8,28 @@ const AddStudentPage = () => {
     name: '',
     email: '',
     rollNo: '',
-    courseId: '', // You would fetch a list of courses for this dropdown
+    courseId: '',
   });
+  const [courses, setCourses] = useState([]); // State to hold the course list
   const [isLoading, setIsLoading] = useState(false);
   const token = useAuthStore((state) => state.token);
+
+  // Fetch courses when the component mounts
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/courses', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Could not fetch courses');
+        const data = await response.json();
+        setCourses(data);
+      } catch (error) {
+        toast.error(error.message);
+      }
+    };
+    fetchCourses();
+  }, [token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +40,6 @@ const AddStudentPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Backend team needs to create this endpoint
       const response = await fetch('http://localhost:8000/api/coordinator/add-student', {
         method: 'POST',
         headers: {
@@ -36,7 +53,6 @@ const AddStudentPage = () => {
         throw new Error(data.message || 'Failed to add student');
       }
       toast.success('Student added successfully!');
-      // Clear the form
       setFormData({ name: '', email: '', rollNo: '', courseId: '' });
     } catch (error) {
       toast.error(error.message);
@@ -50,7 +66,8 @@ const AddStudentPage = () => {
       <h2 className="text-3xl font-bold text-gray-800 mb-6">Add New Student</h2>
       <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Full Name */}
+          {/* ... other form inputs ... */}
+           {/* Full Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
             <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
@@ -65,14 +82,17 @@ const AddStudentPage = () => {
             <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700">Roll Number</label>
             <input type="text" name="rollNo" id="rollNo" required value={formData.rollNo} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
           </div>
-          {/* Course Selection */}
+
+          {/* Course Selection (Now dynamic) */}
           <div>
             <label htmlFor="courseId" className="block text-sm font-medium text-gray-700">Assign to Course</label>
             <select name="courseId" id="courseId" required value={formData.courseId} onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
               <option value="" disabled>Select a course</option>
-              {/* In a real app, you would fetch and map courses here */}
-              <option value="1">Web Development (CS301)</option>
-              <option value="2">Database Systems (CS302)</option>
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>
+                  {course.name} ({course.code})
+                </option>
+              ))}
             </select>
           </div>
           <div className="flex justify-end">

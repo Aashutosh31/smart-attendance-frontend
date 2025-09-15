@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
 import { Camera, BarChart3, Users, Clock, AlertTriangle, Save, CheckCircle } from 'lucide-react';
 

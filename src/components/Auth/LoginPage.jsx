@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { toast } from 'react-toastify';
 import { BookOpen, KeyRound } from 'lucide-react';
 

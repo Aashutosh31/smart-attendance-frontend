@@ -1,6 +1,6 @@
 import React, { useState, useEffect,useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { User, Camera, Plus } from 'lucide-react'; // Changed icon
 import { toast } from 'react-toastify';
 

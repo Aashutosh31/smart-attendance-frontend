@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
 import { ChevronDown, ChevronRight, User, CheckCircle, XCircle } from 'lucide-react';
 

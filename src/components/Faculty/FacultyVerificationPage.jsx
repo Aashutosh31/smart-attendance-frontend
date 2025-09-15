@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; // 1. Import useCallback
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 import { toast } from 'react-toastify';
 import { Camera, ShieldCheck, Loader } from 'lucide-react';
 

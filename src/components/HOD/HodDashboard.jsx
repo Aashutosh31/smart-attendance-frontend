@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { UserCheck, Users, LogOut, Bell, AlertTriangle, BarChart3 } from 'lucide-react'; // Added BarChart3
 import { toast } from 'react-toastify';
+import { useThemeStore } from '../../store/ThemeStore.jsx';
 
 const HodDashboard = () => {
+   const { theme } = useThemeStore(); // 2. Get the current theme
+
+  // 3. Add a useEffect to apply the theme to the <html> tag
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
   const navigate = useNavigate();
   const { logout: logoutAction, token } = useAuthStore();
   const [notifications, setNotifications] = useState([]);

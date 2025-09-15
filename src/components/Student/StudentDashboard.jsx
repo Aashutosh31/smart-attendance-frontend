@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, BookOpen, CheckCircle, XCircle } from 'lucide-react';
 

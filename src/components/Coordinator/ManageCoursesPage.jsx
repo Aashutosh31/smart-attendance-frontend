@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../store/AuthStore';
+import { useAuthStore } from '../../store/AuthStore';
 import { Plus, BookOpen, Users, MoreHorizontal } from 'lucide-react';
 import { toast } from 'react-toastify';
 
