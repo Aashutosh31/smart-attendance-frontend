@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/AuthStore';
-import { Shield, Users, BookOpen, LogOut,BarChart3 } from 'lucide-react';
+import { Shield, Users, LogOut, BarChart3 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -13,10 +13,11 @@ const AdminDashboard = () => {
   };
 
   const navItems = [
+    // --- NEW "REPORTS" LINK ADDED ---
+    { to: "/admin/reports", name: "Reports", icon: BarChart3 },
     { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
     { to: "/admin/manage-students", name: "Manage Students", icon: Users },
-    { to: "/admin/manage-courses", name: "Manage Courses", icon: BookOpen },
-     { to: "/admin/analytics", name: "Analytics", icon: BarChart3 }
+    { to: "/admin/analytics", name: "Analytics", icon: BarChart3 }
   ];
 
   return (

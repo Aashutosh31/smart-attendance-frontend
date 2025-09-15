@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/AuthStore.jsx';
-import { User, Fingerprint, Plus } from 'lucide-react';
+import { User, Camera, Plus } from 'lucide-react'; // Changed icon
 import { toast } from 'react-toastify';
 
-// A simple loading skeleton to improve user experience
 const TableSkeleton = () => (
     <div className="animate-pulse p-4">
         <div className="h-14 bg-gray-200 rounded-md mb-2"></div>
@@ -19,7 +18,7 @@ const ManageStudentsPage = () => {
   const token = useAuthStore((state) => state.token);
   const navigate = useNavigate();
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:8000/api/admin/students', {
@@ -36,16 +35,15 @@ const ManageStudentsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchStudents();
-  }, [token]);
+  }, [fetchStudents]);
 
-  // This function will launch the bridge app in enrollment mode for a specific student.
-  const handleEnrollFingerprint = (studentId) => {
-    toast.info(`Opening scanner to enroll student #${studentId}...`);
-    window.location.href = `attendtrack://scan?token=${token}&mode=enroll&userId=${studentId}&userType=student`;
+  // This function now gives instructions for the student mobile app.
+  const handleEnrollFace = (studentId) => {
+    toast.info(`Please instruct student #${studentId} to enroll their face using the AttendTrack mobile app.`);
   };
 
   return (
@@ -53,7 +51,7 @@ const ManageStudentsPage = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-800">Manage Students</h2>
         <button
-          onClick={() => navigate('/coordinator/add-student')} // Navigate to the existing page for adding students
+          onClick={() => navigate('/coordinator/add-student')}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
           <Plus size={18} />
           <span>Add New Student</span>
@@ -84,12 +82,13 @@ const ManageStudentsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.courseName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">{student.overallAttendance}%</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {/* Updated button */}
                       <button
-                        onClick={() => handleEnrollFingerprint(student.id)}
+                        onClick={() => handleEnrollFace(student.id)}
                         className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                       >
-                        <Fingerprint size={16} />
-                        <span>Enroll Fingerprint</span>
+                        <Camera size={16} />
+                        <span>Enroll Face</span>
                       </button>
                     </td>
                   </tr>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/AuthStore';
-import { UserPlus, BarChart3, Users, LogOut } from 'lucide-react';
+import { UserPlus, BarChart3, Users, LogOut, BookOpen } from 'lucide-react'; // Added BookOpen
 
 const ProgramCoordinatorDashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +14,8 @@ const ProgramCoordinatorDashboard = () => {
 
   const navItems = [
     { to: "/coordinator/add-student", name: "Add Student", icon: UserPlus },
+    // --- NEW LINK ADDED HERE ---
+    { to: "/coordinator/manage-courses", name: "Manage Courses", icon: BookOpen },
     { to: "/coordinator/view-attendance", name: "View Attendance", icon: Users },
     { to: "/coordinator/analytics", name: "Analytics", icon: BarChart3 },
   ];
@@ -44,7 +46,6 @@ const ProgramCoordinatorDashboard = () => {
         </div>
       </aside>
       <main className="flex-1 p-6 overflow-auto">
-        {/* The child pages for the coordinator will be rendered here */}
         <Outlet />
       </main>
     </div>

@@ -25,9 +25,12 @@ import AddStudentPage from "./components/AddStudentPage.jsx";
 import ManageStudentsPage from "./components/ManageStudentsPage.jsx";
 import AdminAnalyticsPage from "./components/AdminAnalyticsPage.jsx";
 import CoordinatorAttendancePage from "./components/CoordinatorAttendancePage.jsx";
-import AttendanceSessionPage from "./components/AttendanceSessionPage.jsx";
 import ManageCoursesPage from "./components/ManageCoursesPage.jsx";
 import CoordinatorAnalytics from "./components/CoordinatorAnalytics.jsx";
+import HodVerificationPage from "./components/HodVerificationPage.jsx";
+import AdminReportsPage from "./components/AdminReportsPage.jsx";
+// --- NEW IMPORT ---
+import FacultyReportsPage from "./components/FacultyReportsPage.jsx";
 
 
 import "./index.css";
@@ -43,51 +46,44 @@ function App() {
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* --- FACULTY ROUTES --- */}
-          {/* <Route element={<ProtectedRoute allowedRoles={['faculty']} />}> */}
             <Route path="/verify" element={<FacultyVerificationPage />} />
             <Route path="/" element={<FacultyDashboard />}>
               <Route index element={<DashboardOverview />} />
               <Route path="courses" element={<CoursesPage />} />
-              <Route path="courses/:courseId/attendance" element={<AttendanceSessionPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
-          {/* </Route> */}
 
           {/* --- ADMIN ROUTES --- */}
-          {/* <Route element={<ProtectedRoute allowedRoles={['admin']} />}> */}
             <Route path="/admin" element={<AdminDashboard />}>
-              <Route index element={<ManageFacultyPage />} />
+              <Route index element={<AdminReportsPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
               <Route path="manage-students" element={<ManageStudentsPage />} />
-               <Route path="analytics" element={<AdminAnalyticsPage />} />
-               <Route path="manage-courses" element={<ManageCoursesPage />} />
+              <Route path="analytics" element={<AdminAnalyticsPage />} />
             </Route>
-          {/* </Route> */}
 
           {/* --- HOD ROUTES --- */}
-          {/* <Route element={<ProtectedRoute allowedRoles={['hod']} />}> */}
+            <Route path="/hod/verify" element={<HodVerificationPage />} />
             <Route path="/hod" element={<HodDashboard />}>
               <Route index element={<FacultyAttendancePage />} />
               <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
+              {/* --- NEW ROUTE ADDED HERE --- */}
+              <Route path="faculty-reports" element={<FacultyReportsPage />} />
               <Route path="student-reports" element={<StudentReportsPage />} />
             </Route>
-          {/* </Route> */}
           
           {/* --- PROGRAM COORDINATOR ROUTES --- */}
-          {/* <Route element={<ProtectedRoute allowedRoles={['program_coordinator']} />}> */}
             <Route path="/coordinator" element={<ProgramCoordinatorDashboard />}>
               <Route index element={<AddStudentPage />} />
               <Route path="add-student" element={<AddStudentPage />} />
-               <Route path="view-attendance" element={<CoordinatorAttendancePage />} />
-            <Route path="analytics" element={<CoordinatorAnalytics />} />
+              <Route path="manage-courses" element={<ManageCoursesPage />} />
+              <Route path="view-attendance" element={<CoordinatorAttendancePage />} />
+              <Route path="analytics" element={<CoordinatorAnalytics />} />
             </Route>
-          {/* </Route> */}
 
           {/* --- STUDENT ROUTES --- */}
-          {/* <Route element={<ProtectedRoute allowedRoles={['student']} />}> */}
             <Route path="/student" element={<StudentDashboard />} />
-          {/* </Route> */}
         </Routes>
       </Router>
     </>

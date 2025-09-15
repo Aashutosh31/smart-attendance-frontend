@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // 1. Import useCallback
 import { useAuthStore } from '../store/AuthStore.jsx';
-import { Plus, User, Fingerprint } from 'lucide-react';
+import { Plus, User, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-// --- Add Faculty Modal Component ---
+// AddFacultyModal component remains the same, no changes needed here.
 const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
   const [formData, setFormData] = useState({ name: '', email: '', department: '' });
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +16,6 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Backend team needs to create this endpoint
       const response = await fetch('http://localhost:8000/api/admin/faculty', {
         method: 'POST',
         headers: {
@@ -27,7 +26,7 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
       });
       if (!response.ok) throw new Error('Failed to add faculty member.');
       toast.success('Faculty member added successfully!');
-      onFacultyAdded(); // Refresh the list and close modal
+      onFacultyAdded();
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -66,8 +65,6 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
   );
 };
 
-
-// A simple loading skeleton to improve user experience
 const TableSkeleton = () => (
     <div className="animate-pulse p-4">
         <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
@@ -76,14 +73,14 @@ const TableSkeleton = () => (
     </div>
 );
 
-// --- Main ManageFacultyPage Component ---
 const ManageFacultyPage = () => {
   const [facultyList, setFacultyList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const token = useAuthStore((state) => state.token);
 
-  const fetchFaculty = async () => {
+  // 2. Wrap the fetch function in useCallback
+  const fetchFaculty = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:8000/api/admin/faculty', {
@@ -100,15 +97,15 @@ const ManageFacultyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]); // Add dependencies of the function here
 
+  // 3. Add the function itself to the useEffect dependency array
   useEffect(() => {
     fetchFaculty();
-  }, [token]);
+  }, [fetchFaculty]);
 
-  const handleEnrollFingerprint = (facultyId) => {
-    toast.info(`Opening scanner to enroll faculty #${facultyId}...`);
-    window.location.href = `attendtrack://scan?token=${token}&mode=enroll&userId=${facultyId}&userType=faculty`;
+  const handleEnrollFace = (facultyId) => {
+    toast.info(`Please guide faculty member #${facultyId} to the verification page to enroll their face.`);
   };
 
   const handleFacultyAdded = () => {
@@ -145,30 +142,32 @@ const ManageFacultyPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {isLoading ? (
-                <tr><td colSpan="4"><TableSkeleton /></td></tr>
-              ) : (
-                facultyList.map((faculty) => (
-                  <tr key={faculty.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{faculty.name}</div>
-                      <div className="text-sm text-gray-500">{faculty.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{faculty.department}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(faculty.dateJoined).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleEnrollFingerprint(faculty.id)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                      >
-                        <Fingerprint size={16} />
-                        <span>Enroll Fingerprint</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+           <tbody className="divide-y divide-gray-200">
+            {isLoading ? (
+              <tr><td colSpan="4"><TableSkeleton /></td></tr>
+            ) : (
+              facultyList.map((faculty) => (
+                <tr key={faculty._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{faculty.name}</div>
+                    <div className="text-sm text-gray-500">{faculty.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{faculty.department}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(faculty.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEnrollFace(faculty._id)}
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <Camera size={16} />
+                      <span>Enroll Face</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
             </tbody>
           </table>
         </div>

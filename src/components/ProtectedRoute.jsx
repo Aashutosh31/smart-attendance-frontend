@@ -11,21 +11,36 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }
 
   const isFaculty = role === 'faculty';
-  const isVerificationPage = location.pathname === '/verify';
+  const isHod = role === 'hod';
+  const isVerificationPage = location.pathname === '/verify' || location.pathname === '/hod/verify';
 
+  // Handle Faculty Verification
   if (isFaculty && !isVerified) {
-    return isVerificationPage ? <Outlet /> : <Navigate to="/verify" replace />;
+    return location.pathname === '/verify' ? <Outlet /> : <Navigate to="/verify" replace />;
   }
-
+  // --- FIX --- Use the 'isVerificationPage' variable
   if (isFaculty && isVerified && isVerificationPage) {
     return <Navigate to="/" replace />;
+  }
+  
+  // Handle HOD Verification
+  if (isHod && !isVerified) {
+    return location.pathname === '/hod/verify' ? <Outlet /> : <Navigate to="/hod/verify" replace />;
+  }
+  // --- FIX --- Use the 'isVerificationPage' variable
+  if (isHod && isVerified && isVerificationPage) {
+    return <Navigate to="/hod" replace />;
   }
 
   if (allowedRoles && allowedRoles.includes(role)) {
     return <Outlet />;
   }
+  
+  if (allowedRoles && !allowedRoles.includes(role)) {
+      return <Navigate to="/unauthorized" replace />;
+  }
 
-  return <Navigate to="/unauthorized" replace />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
