@@ -49,7 +49,7 @@ const ManageStudentsPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Manage Students</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Manage Students</h2>
         <button
           onClick={() => navigate('/coordinator/add-student')}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">

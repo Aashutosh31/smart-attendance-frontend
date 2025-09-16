@@ -55,7 +55,7 @@ const CoordinatorAttendancePage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">View Student Attendance</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">View Student Attendance</h2>
       </div>
 
       {/* Filter Section */}

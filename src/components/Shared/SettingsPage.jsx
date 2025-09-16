@@ -3,11 +3,11 @@ import { useThemeStore } from '../../store/ThemeStore';
 import { Sun, Moon } from 'lucide-react';
 
 const SettingsPage = () => {
-  // Get the current theme and the toggle function from the store
   const { theme, toggleTheme } = useThemeStore();
 
   return (
     <div>
+      {/* Add dark mode text color class here */}
       <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6">Settings</h2>
       
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 max-w-lg">

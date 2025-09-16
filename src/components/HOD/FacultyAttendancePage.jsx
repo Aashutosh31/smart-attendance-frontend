@@ -37,7 +37,7 @@ const FacultyAttendancePage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Faculty Attendance - Today</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Faculty Attendance - Today</h2>
         {/* You can add filters here later, e.g., a date picker */}
       </div>
 

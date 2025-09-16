@@ -60,7 +60,7 @@ const FacultyReportsPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Faculty Attendance Reports</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Faculty Attendance Reports</h2>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
             <Download size={18} />
             <span>Export</span>

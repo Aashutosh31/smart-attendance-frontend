@@ -44,7 +44,7 @@ const StudentReportsPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Student Reports</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Student Reports</h2>
         <div className="flex space-x-2">
             <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
                 <Filter size={18} />

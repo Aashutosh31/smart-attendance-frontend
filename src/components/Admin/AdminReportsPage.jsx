@@ -63,11 +63,12 @@ const AdminReportsPage = () => {
         </span>
     );
 
-    if (isLoading) return <div>Loading reports...</div>;
+    if (isLoading) return <div className='dark:text-white'>Loading reports...</div>;
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Attendance Reports</h2>
+           
+            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">Attendance Reports</h2>
             <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <TreeNode
                     title="HODs Attendance"

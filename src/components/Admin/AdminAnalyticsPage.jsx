@@ -42,7 +42,7 @@ const AdminAnalyticsPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Global Analytics</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Global Analytics</h2>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
             <Download size={18} />
             <span>Export All Reports</span>

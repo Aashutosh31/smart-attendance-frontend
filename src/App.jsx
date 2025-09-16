@@ -43,7 +43,20 @@ import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.
 import "./index.css";
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
+// --- NEW IMPORTS ---
+import React, { useEffect } from 'react';
+import { useThemeStore } from "./store/ThemeStore";
+
 function App() {
+  // --- NEW THEME LOGIC ---
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+  // --- END OF NEW LOGIC ---
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} theme="light" />

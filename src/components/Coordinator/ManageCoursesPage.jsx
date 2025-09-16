@@ -50,10 +50,10 @@ const CourseModal = ({ isOpen, onClose, onCourseHandled, token, existingCourse }
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">{existingCourse ? 'Edit Course' : 'Add New Course'}</h2>
+        <h2 className="text-2xl font-bold text-gray-800   mb-6">{existingCourse ? 'Edit Course' : 'Add New Course'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Course Name</label>
+            <label className="block text-sm font-medium text-gray-700 ">Course Name</label>
             <input type="text" value={courseName} onChange={(e) => setCourseName(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
           </div>
           <div>
@@ -118,7 +118,7 @@ const ManageCoursesPage = () => {
         existingCourse={editingCourse}
       />
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Manage Courses</h2>
+        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Manage Courses</h2>
         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
           <Plus size={18} />
           <span>Add New Course</span>
