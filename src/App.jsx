@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
 import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
-import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx"; // Added missing import
+import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -25,10 +25,10 @@ import FacultyVerificationPage from "./components/Faculty/FacultyVerificationPag
 // Admin
 import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
 import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
-import ManageStudentsPage from "./components/Admin/ManageStudentsPage.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
-import ManageHodsPage from "./components/Admin/ManageHods.jsx"; // CORRECTED PATH
-import ManageCoordinatorsPage from "./components/Admin/ManageCoordinators.jsx"; // CORRECTED PATH
+import ManageHodsPage from "./components/Admin/ManageHods.jsx";
+import ManageCoordinatorsPage from "./components/Admin/ManageCoordinators.jsx";
+import ViewStudentsPage from "./components/Admin/ViewStudents.jsx"; // NEW
 
 // HOD
 import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
@@ -63,7 +63,7 @@ function App() {
       <Router>
         <Routes>
           {/* --- PUBLIC & AUTH ROUTES --- */}
-          <Route path="/register-college" element={<CollegeRegistrationPage />} /> {/* Added missing route */}
+          <Route path="/register-college" element={<CollegeRegistrationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/verify" element={<FacultyVerificationPage />} />
@@ -84,7 +84,7 @@ function App() {
               <Route path="manage-hods" element={<ManageHodsPage />} />
               <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
-              <Route path="manage-students" element={<ManageStudentsPage />} />
+              <Route path="view-students" element={<ViewStudentsPage />} /> {/* UPDATED */}
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

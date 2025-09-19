@@ -17,7 +17,7 @@ const AdminDashboard = () => {
     { to: "/admin/manage-hods", name: "Manage HODs", icon: UserSquare }, // NEW
     { to: "/admin/manage-coordinators", name: "Manage Coordinators", icon: UserSquare }, // NEW
     { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
-    { to: "/admin/manage-students", name: "Manage Students", icon: Users },
+    { to: "/admin/view-students", name: "View Students", icon: Users },
     { to: "/admin/analytics", name: "Analytics", icon: BarChart3 },
     { to: "/admin/settings", name: "Settings", icon: Settings },
   ];

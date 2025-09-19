@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/AuthStore.jsx';
-import { UserPlus, User } from 'lucide-react';
+import { UserPlus, User, KeyRound, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../supabaseClient';
 
 const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
-  const [formData, setFormData] = useState({ name: '', email: '', department: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', department: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -14,23 +14,32 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
     setIsLoading(true);
     try {
-      // Call the same universal 'create-user' function with the 'hod' role
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: formData.email,
-          password: 'default-password-123', // Users will be prompted to change this
+          password: formData.password,
           role: 'hod',
           fullName: formData.name,
         },
       });
-
       if (error) throw error;
 
-      // You can add HOD-specific details to another table here if needed
-      // For example: await supabase.from('hod_details').insert({ user_id: data.user.id, department: formData.department });
-
+      // Also insert department into the profiles table
+      await supabase
+        .from('profiles')
+        .update({ department: formData.department })
+        .eq('id', data.user.id);
+        
       toast.success('HOD added successfully!');
       onHodAdded();
     } catch (error) {
@@ -59,6 +68,20 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
             <label className="block text-sm font-medium text-gray-700">Department</label>
             <input type="text" name="department" required onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <div className="relative">
+              <input type="password" name="password" required onChange={handleChange} className="mt-1 block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3"><KeyRound className="w-5 h-5 text-gray-400" /></div>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+             <div className="relative">
+              <input type="password" name="confirmPassword" required onChange={handleChange} className="mt-1 block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3"><KeyRound className="w-5 h-5 text-gray-400" /></div>
+            </div>
+          </div>
           <div className="flex justify-end space-x-4 pt-4">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
             <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300">
@@ -71,6 +94,14 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
   );
 };
 
+const TableSkeleton = () => (
+    <div className="animate-pulse p-4">
+        <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
+        <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
+        <div className="h-12 bg-gray-200 rounded-md"></div>
+    </div>
+);
+
 const ManageHodsPage = () => {
   const [hodList, setHodList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +111,7 @@ const ManageHodsPage = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles') // Assuming you have a 'profiles' table or view with a 'role' column
+        .from('profiles')
         .select('*')
         .eq('role', 'hod');
 
@@ -101,6 +132,10 @@ const ManageHodsPage = () => {
     setIsModalOpen(false);
     fetchHods();
   };
+  
+  const handleEnrollFace = (hodId) => {
+    toast.info(`Please guide HOD #${hodId} to the verification page to enroll their face.`);
+  };
 
   return (
     <div>
@@ -118,7 +153,49 @@ const ManageHodsPage = () => {
           <span>Add New HOD</span>
         </button>
       </div>
-      {/* Table to display HODs would go here, similar to ManageFacultyPage */}
+      
+      {/* --- NEW: Table to display HODs --- */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Joined</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+           <tbody className="divide-y divide-gray-200">
+            {isLoading ? (
+              <tr><td colSpan="4"><TableSkeleton /></td></tr>
+            ) : (
+              hodList.map((hod) => (
+                <tr key={hod.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{hod.full_name}</div>
+                    <div className="text-sm text-gray-500">{hod.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hod.department || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(hod.created_at).toLocaleDateString() || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEnrollFace(hod.id)}
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <Camera size={16} />
+                      <span>Enroll Face</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
