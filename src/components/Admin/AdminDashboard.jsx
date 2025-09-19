@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/AuthStore';
-import { Shield, Users, LogOut, BarChart3, Settings } from 'lucide-react'; // Import Settings icon
+import { Shield, Users, LogOut, BarChart3, Settings, UserSquare } from 'lucide-react'; // Import a new icon
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -14,10 +14,12 @@ const AdminDashboard = () => {
 
   const navItems = [
     { to: "/admin/reports", name: "Reports", icon: BarChart3 },
+    { to: "/admin/manage-hods", name: "Manage HODs", icon: UserSquare }, // NEW
+    { to: "/admin/manage-coordinators", name: "Manage Coordinators", icon: UserSquare }, // NEW
     { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
     { to: "/admin/manage-students", name: "Manage Students", icon: Users },
     { to: "/admin/analytics", name: "Analytics", icon: BarChart3 },
-    { to: "/admin/settings", name: "Settings", icon: Settings }, // Added Settings link
+    { to: "/admin/settings", name: "Settings", icon: Settings },
   ];
 
   return (

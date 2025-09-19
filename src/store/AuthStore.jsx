@@ -1,27 +1,49 @@
 import { create } from 'zustand';
+import { supabase } from '../supabaseClient';
 
 export const useAuthStore = create((set) => ({
   // State
-  token: localStorage.getItem('authToken') || null,
-  role: localStorage.getItem('userRole') || null,
-  isAuthenticated: !!localStorage.getItem('authToken'),
-  isVerified: false, // <-- NEW: Track if faculty has passed facial scan
+  session: null,
+  user: null,
+  isAuthenticated: false,
+  isVerified: false,
 
   // Actions
-  login: (token, role) => {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userRole', role);
-    // On login, they are authenticated but NOT yet verified
-    set({ token, role, isAuthenticated: true, isVerified: false });
+  setSession: (session) => {
+    const user = session?.user || null;
+    set({ 
+      session, 
+      user, 
+      isAuthenticated: !!session, 
+      isVerified: false 
+    });
   },
 
-  // NEW: Action to call after a successful face scan
+  // --- NEW ACTION ---
+  // Manually sets the session from our custom login function
+  setAuthSession: (sessionData) => {
+    supabase.auth.setSession(sessionData);
+    const user = sessionData?.user || null;
+    set({
+      session: sessionData,
+      user,
+      isAuthenticated: !!sessionData,
+      isVerified: false,
+    });
+  },
+  
   setVerified: () => set({ isVerified: true }),
 
-  logout: () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    // Reset everything on logout
-    set({ token: null, role: null, isAuthenticated: false, isVerified: false });
+  logout: async () => {
+    await supabase.auth.signOut();
+    set({ session: null, user: null, isAuthenticated: false, isVerified: false });
   },
 }));
+
+// The onAuthStateChange listener remains important for Google login, etc.
+supabase.auth.onAuthStateChange((event, session) => {
+  // We only set the session from the listener if it's not a manual sign-in
+  if (event !== 'SIGNED_IN') {
+    useAuthStore.getState().setSession(session);
+  }
+});

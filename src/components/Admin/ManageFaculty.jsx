@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react'; // 1. Import useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/AuthStore.jsx';
 import { Plus, User, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { supabase } from '../../supabaseClient'; // Import supabase
 
-// AddFacultyModal component remains the same, no changes needed here.
-const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
+// --- Updated AddFacultyModal to use Supabase Edge Function ---
+const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
   const [formData, setFormData] = useState({ name: '', email: '', department: '' });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -16,17 +17,24 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/admin/faculty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      // Invoke the 'create-user' Edge Function
+      //eslint-disable-next-line
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: formData.email,
+          password: 'default-password-123', // Set a temporary default password
+          role: 'faculty',
+          fullName: formData.name,
         },
-        body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error('Failed to add faculty member.');
+
+      if (error) throw error;
+
+      // You might want to insert faculty-specific details into another table here
+      // e.g., supabase.from('faculty_details').insert({ user_id: data.user.id, department: formData.department });
+
       toast.success('Faculty member added successfully!');
-      onFacultyAdded();
+      onFacultyAdded(); // This will close the modal and refresh the list
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -65,6 +73,9 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded, token }) => {
   );
 };
 
+
+// The rest of ManageFacultyPage.jsx remains largely the same,
+// just ensure fetchFaculty() fetches from your new Supabase tables.
 const TableSkeleton = () => (
     <div className="animate-pulse p-4">
         <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
@@ -77,29 +88,28 @@ const ManageFacultyPage = () => {
   const [facultyList, setFacultyList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const token = useAuthStore((state) => state.token);
+  //eslint-disable-next-line
+  const { session } = useAuthStore((state) => state);
 
-  // 2. Wrap the fetch function in useCallback
   const fetchFaculty = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/admin/faculty', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!response.ok) {
-        throw new Error('Could not fetch faculty data. Is the backend server running?');
-      }
-      const data = await response.json();
-      setFacultyList(data);
+        // Example: Fetching from a 'profiles' view or table in Supabase
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('role', 'faculty');
+
+        if (error) throw error;
+        setFacultyList(data);
     } catch (error) {
       console.error("Failed to fetch faculty list:", error);
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [token]); // Add dependencies of the function here
+  }, []);
 
-  // 3. Add the function itself to the useEffect dependency array
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
@@ -110,7 +120,7 @@ const ManageFacultyPage = () => {
 
   const handleFacultyAdded = () => {
     setIsModalOpen(false);
-    fetchFaculty();
+    fetchFaculty(); // Refresh the list after adding
   };
 
   return (
@@ -119,7 +129,6 @@ const ManageFacultyPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onFacultyAdded={handleFacultyAdded}
-        token={token}
       />
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Manage Faculty</h2>
@@ -147,18 +156,18 @@ const ManageFacultyPage = () => {
               <tr><td colSpan="4"><TableSkeleton /></td></tr>
             ) : (
               facultyList.map((faculty) => (
-                <tr key={faculty._id} className="hover:bg-gray-50">
+                <tr key={faculty.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{faculty.name}</div>
+                    <div className="text-sm font-medium text-gray-900">{faculty.full_name}</div>
                     <div className="text-sm text-gray-500">{faculty.email}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{faculty.department}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{faculty.department || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(faculty.createdAt).toLocaleDateString()}
+                    {new Date(faculty.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => handleEnrollFace(faculty._id)}
+                      onClick={() => handleEnrollFace(faculty.id)}
                       className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <Camera size={16} />

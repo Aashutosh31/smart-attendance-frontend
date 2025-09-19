@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
 import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
+import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx"; // Added missing import
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -26,6 +27,8 @@ import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
 import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
 import ManageStudentsPage from "./components/Admin/ManageStudentsPage.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
+import ManageHodsPage from "./components/Admin/ManageHods.jsx"; // CORRECTED PATH
+import ManageCoordinatorsPage from "./components/Admin/ManageCoordinators.jsx"; // CORRECTED PATH
 
 // HOD
 import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
@@ -42,13 +45,10 @@ import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.
 //other imports
 import "./index.css";
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
-
-// --- NEW IMPORTS ---
 import React, { useEffect } from 'react';
 import { useThemeStore } from "./store/ThemeStore";
 
 function App() {
-  // --- NEW THEME LOGIC ---
   const { theme } = useThemeStore();
 
   useEffect(() => {
@@ -56,13 +56,14 @@ function App() {
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
   }, [theme]);
-  // --- END OF NEW LOGIC ---
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} theme="light" />
       <Router>
         <Routes>
           {/* --- PUBLIC & AUTH ROUTES --- */}
+          <Route path="/register-college" element={<CollegeRegistrationPage />} /> {/* Added missing route */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/verify" element={<FacultyVerificationPage />} />
@@ -80,6 +81,8 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />}>
               <Route index element={<AdminReportsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="manage-hods" element={<ManageHodsPage />} />
+              <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
               <Route path="manage-students" element={<ManageStudentsPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
@@ -90,6 +93,7 @@ function App() {
             <Route path="/hod" element={<HodDashboard />}>
               <Route index element={<FacultyAttendancePage />} />
               <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
+              <Route path="manage-faculty" element={<ManageFacultyPage />} />
               <Route path="faculty-reports" element={<FacultyReportsPage />} />
               <Route path="student-reports" element={<StudentReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />

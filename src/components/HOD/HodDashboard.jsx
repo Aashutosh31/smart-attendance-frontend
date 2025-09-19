@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/AuthStore';
-import { UserCheck, Users, LogOut, Bell, AlertTriangle, BarChart3, Settings } from 'lucide-react'; // Import Settings icon
+import { UserCheck, Users, LogOut, Bell, AlertTriangle, BarChart3, Settings } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const HodDashboard = () => {
@@ -10,7 +10,6 @@ const HodDashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  // This useEffect can stay as it's specific to the HOD's notifications
   React.useEffect(() => {
     const fetchNotifications = async () => {
         try {
@@ -34,9 +33,10 @@ const HodDashboard = () => {
 
   const navItems = [
     { to: "/hod/faculty-attendance", name: "Daily Attendance", icon: UserCheck },
+    { to: "/hod/manage-faculty", name: "Manage Faculty", icon: Users }, // NEW
     { to: "/hod/faculty-reports", name: "Faculty Reports", icon: BarChart3 },
     { to: "/hod/student-reports", name: "Student Reports", icon: Users },
-    { to: "/hod/settings", name: "Settings", icon: Settings }, // Added Settings link
+    { to: "/hod/settings", name: "Settings", icon: Settings },
   ];
 
   return (
