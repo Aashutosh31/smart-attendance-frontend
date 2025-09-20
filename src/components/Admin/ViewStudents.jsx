@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../supabaseClient';
+import { useAuthStore } from '../../store/AuthStore.jsx';
 
 const TableSkeleton = () => (
     <div className="animate-pulse p-4">
@@ -13,14 +14,21 @@ const TableSkeleton = () => (
 const ViewStudentsPage = () => {
   const [studentList, setStudentList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { collegeId, isAuthenticated } = useAuthStore();
 
   const fetchStudents = useCallback(async () => {
+    if(!isAuthenticated || !collegeId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
+      // --- CHANGE: Add .eq('college_id', collegeId) to filter by college ---
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'student');
+        .eq('role', 'student')
+        .eq('college_id', collegeId);
 
       if (error) throw error;
       setStudentList(data);
@@ -29,7 +37,7 @@ const ViewStudentsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [collegeId, isAuthenticated]); // --- CHANGE: Add dependencies ---
 
   useEffect(() => {
     fetchStudents();
@@ -64,7 +72,7 @@ const ViewStudentsPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{student.branch || 'N/A'}</div>
-                    <div className="text-sm text-gray-500">{student.year || 'N/A'}st Year, Sem {student.semester || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{student.year || 'N/A'}-Year, Sem {student.semester || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-black-500">{student.department || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

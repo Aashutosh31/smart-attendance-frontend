@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/AuthStore.jsx';
-import { Plus, User, Camera, KeyRound } from 'lucide-react';
+import { Plus, Camera, KeyRound } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../supabaseClient';
 
 const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
   const [formData, setFormData] = useState({ name: '', email: '', department: '', subject: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const { collegeId } = useAuthStore();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,8 +15,6 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Password Validation
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
@@ -24,23 +23,29 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
       toast.error("Password must be at least 6 characters long.");
       return;
     }
-
+    // --- ADD THIS CHECK ---
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+    // --- END OF ADDITION ---
     setIsLoading(true);
     try {
-      // 1. Create the user in Supabase Auth
+      // Step 1: Create user via Edge Function.
       const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: formData.email,
           password: formData.password,
           role: 'faculty',
           fullName: formData.name,
+          collegeId: collegeId
         },
       });
 
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Could not create user.");
+      if (!authData.user) throw new Error("Could not create faculty user.");
 
-      // 2. Update their profile with the extra details
+      // Step 2: Update the new profile with faculty-specific details.
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -76,7 +81,6 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <input type="email" name="email" required onChange={handleChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" />
             </div>
-            {/* --- NEW/UPDATED Fields --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Department</label>
@@ -126,14 +130,20 @@ const ManageFacultyPage = () => {
   const [facultyList, setFacultyList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { collegeId, isAuthenticated } = useAuthStore();
 
   const fetchFaculty = useCallback(async () => {
+    if(!isAuthenticated || !collegeId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .eq('role', 'faculty');
+            .eq('role', 'faculty')
+            .eq('college_id', collegeId);
 
         if (error) throw error;
         setFacultyList(data);
@@ -143,7 +153,7 @@ const ManageFacultyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [collegeId, isAuthenticated]);
 
   useEffect(() => {
     fetchFaculty();
@@ -206,7 +216,7 @@ const ManageFacultyPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleEnrollFace(faculty.id)}
-                      className="text-blue-600 hover:bg-blue-800 flex items-center space-x-1"
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <Camera size={16} />
                       <span>Enroll Face</span>

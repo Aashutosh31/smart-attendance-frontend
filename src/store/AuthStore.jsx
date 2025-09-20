@@ -2,25 +2,22 @@ import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 
 export const useAuthStore = create((set) => ({
-  // State
   session: null,
   user: null,
   isAuthenticated: false,
   isVerified: false,
+  collegeId: null, // Stores the logged-in user's college ID
 
-  // Actions
   setSession: (session) => {
     const user = session?.user || null;
     set({ 
       session, 
       user, 
       isAuthenticated: !!session, 
-      isVerified: false 
+      collegeId: user?.user_metadata?.college_id || null
     });
   },
 
-  // --- NEW ACTION ---
-  // Manually sets the session from our custom login function
   setAuthSession: (sessionData) => {
     supabase.auth.setSession(sessionData);
     const user = sessionData?.user || null;
@@ -28,7 +25,7 @@ export const useAuthStore = create((set) => ({
       session: sessionData,
       user,
       isAuthenticated: !!sessionData,
-      isVerified: false,
+      collegeId: user?.user_metadata?.college_id || null
     });
   },
   
@@ -36,14 +33,10 @@ export const useAuthStore = create((set) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, isAuthenticated: false, isVerified: false });
+    set({ session: null, user: null, isAuthenticated: false, isVerified: false, collegeId: null });
   },
 }));
 
-// The onAuthStateChange listener remains important for Google login, etc.
-supabase.auth.onAuthStateChange((event, session) => {
-  // We only set the session from the listener if it's not a manual sign-in
-  if (event !== 'SIGNED_IN') {
-    useAuthStore.getState().setSession(session);
-  }
+supabase.auth.onAuthStateChange((_event, session) => {
+  useAuthStore.getState().setSession(session);
 });

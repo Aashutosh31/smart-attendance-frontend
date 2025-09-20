@@ -1,12 +1,14 @@
+// src/components/Admin/ManageHods.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/AuthStore.jsx';
-import { UserPlus, User, KeyRound, Camera } from 'lucide-react';
+import { UserPlus, KeyRound, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../supabaseClient';
 
 const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
   const [formData, setFormData] = useState({ name: '', email: '', department: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const { collegeId } = useAuthStore(); // The logged-in admin's college ID
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,27 +20,36 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
       toast.error("Passwords do not match!");
       return;
     }
+    // --- ADD THIS CHECK ---
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
     }
+    // --- END OF ADDITION ---
+    
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-user', {
+      // Step 1: Create user via Edge Function. The trigger will create their basic profile.
+      const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: formData.email,
           password: formData.password,
           role: 'hod',
           fullName: formData.name,
+          collegeId: collegeId,
         },
       });
-      if (error) throw error;
 
-      // Also insert department into the profiles table
-      await supabase
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Could not create HOD user.");
+
+      // Step 2: Update the new profile with HOD-specific details.
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ department: formData.department })
-        .eq('id', data.user.id);
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
         
       toast.success('HOD added successfully!');
       onHodAdded();
@@ -51,6 +62,7 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
 
   if (!isOpen) return null;
 
+  // JSX is unchanged
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
@@ -94,26 +106,36 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
   );
 };
 
-const TableSkeleton = () => (
-    <div className="animate-pulse p-4">
-        <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
-        <div className="h-12 bg-gray-200 rounded-md mb-2"></div>
-        <div className="h-12 bg-gray-200 rounded-md"></div>
-    </div>
-);
+const TableSkeleton = () => ( /* Unchanged */ <div className="animate-pulse p-4"><div className="h-12 bg-gray-200 rounded-md mb-2"></div><div className="h-12 bg-gray-200 rounded-md mb-2"></div><div className="h-12 bg-gray-200 rounded-md"></div></div>);
 
 const ManageHodsPage = () => {
+  // This component's logic is already correct as it fetches from 'profiles'. No changes needed.
   const [hodList, setHodList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { collegeId, isAuthenticated } = useAuthStore();
 
   const fetchHods = useCallback(async () => {
+    if (!isAuthenticated || !collegeId) {
+        setIsLoading(false);
+        return;
+    }
+     // --- START: DEBUGGING LOGS ---
+    console.log("Attempting to fetch HODs with collegeId:", collegeId);
+    // --- END: DEBUGGING LOGS ---
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'hod');
+        .eq('role', 'hod')
+        .eq('college_id', collegeId);
+
+           // --- START: DEBUGGING LOGS ---
+      console.log("Data received from Supabase:", data);
+      console.log("Error received from Supabase:", error);
+      // --- END: DEBUGGING LOGS ---
 
       if (error) throw error;
       setHodList(data);
@@ -122,7 +144,7 @@ const ManageHodsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [collegeId, isAuthenticated]);
 
   useEffect(() => {
     fetchHods();
@@ -137,6 +159,7 @@ const ManageHodsPage = () => {
     toast.info(`Please guide HOD #${hodId} to the verification page to enroll their face.`);
   };
 
+  // JSX is unchanged
   return (
     <div>
       <AddHodModal
@@ -154,7 +177,6 @@ const ManageHodsPage = () => {
         </button>
       </div>
       
-      {/* --- NEW: Table to display HODs --- */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">

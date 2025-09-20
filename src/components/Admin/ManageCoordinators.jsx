@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../../store/AuthStore.jsx';
-import { UserPlus, User, KeyRound, Camera } from 'lucide-react';
+import { UserPlus, KeyRound, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../../supabaseClient';
 
 const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
   const [formData, setFormData] = useState({ name: '', email: '', department: '', password: '', confirmPassword: '', branch: '', year: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const { collegeId } = useAuthStore();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,41 +15,43 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
+    // --- ADD THIS CHECK ---
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
     }
-
+    // --- END OF ADDITION ---
     setIsLoading(true);
     try {
+      // Step 1: Create user via Edge Function.
       const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: formData.email,
           password: formData.password,
           role: 'program_coordinator',
           fullName: formData.name,
+          collegeId: collegeId
         },
       });
 
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Could not create user.");
+      if (!authData.user) throw new Error("Could not create coordinator user.");
 
+      // Step 2: Update the new profile with coordinator-specific details.
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           department: formData.department,
           branch: formData.branch,
-          year: formData.year
+          year: formData.year,
         })
         .eq('id', authData.user.id);
 
       if (profileError) throw profileError;
-
       toast.success('Program Coordinator added successfully!');
       onCoordinatorAdded();
     } catch (error) {
@@ -127,14 +130,20 @@ const ManageCoordinatorsPage = () => {
   const [coordinatorList, setCoordinatorList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { collegeId, isAuthenticated } = useAuthStore();
 
   const fetchCoordinators = useCallback(async () => {
+    if(!isAuthenticated || !collegeId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'program_coordinator');
+        .eq('role', 'program_coordinator')
+        .eq('college_id', collegeId);
 
       if (error) throw error;
       setCoordinatorList(data);
@@ -143,7 +152,7 @@ const ManageCoordinatorsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [collegeId, isAuthenticated]);
 
   useEffect(() => {
     fetchCoordinators();
@@ -175,7 +184,6 @@ const ManageCoordinatorsPage = () => {
         </button>
       </div>
        
-      {/* --- NEW: Table to display coordinators --- */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -206,7 +214,7 @@ const ManageCoordinatorsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => handleEnrollFace(coordinator.id)}
-                      className="text-blue-600 hover:bg-blue-800 flex items-center space-x-1"
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <Camera size={16} />
                       <span>Enroll Face</span>

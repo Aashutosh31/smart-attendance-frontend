@@ -12,11 +12,11 @@ const AddStudentPage = () => {
     password: '',
     confirmPassword: '',
     department: '',
-    branch: '',      // REPLACED subject with branch
+    branch: '',
     semester: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuthStore();
+  const { user, collegeId } = useAuthStore(); // Get collegeId from logged-in coordinator
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,27 +29,34 @@ const AddStudentPage = () => {
       toast.error("Passwords do not match!");
       return;
     }
+    // --- ADD THIS CHECK ---
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
     }
+    // --- END OF ADDITION ---
+    if (!collegeId) {
+        toast.error("Cannot add student: Your account is not linked to a college.");
+        return;
+    }
 
     setIsLoading(true);
     try {
+      // Step 1: Create the student user via the Edge Function
       const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: formData.email,
           password: formData.password,
           role: 'student',
           fullName: formData.name,
+          collegeId: collegeId
         },
       });
 
       if (authError) throw authError;
       if (!authData.user) throw new Error("Could not create student user.");
 
-      // Inherit only the year from the logged-in coordinator
-      // Fetch coordinator's profile from the profiles table
+      // Step 2: Get coordinator's year to assign to the student
       const { data: coordinatorProfile, error: coordinatorError } = await supabase
         .from('profiles')
         .select('year')
@@ -57,14 +64,15 @@ const AddStudentPage = () => {
         .single();
       if (coordinatorError) throw coordinatorError;
 
+      // Step 3: Update the student's new profile with specific details
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           roll_number: formData.rollNo,
           department: formData.department,
-          branch: formData.branch, // Get branch from the form
+          branch: formData.branch,
           semester: formData.semester,
-          year: coordinatorProfile.year, // Inherited
+          year: coordinatorProfile.year,
         })
         .eq('id', authData.user.id);
 
