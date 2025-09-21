@@ -1,87 +1,118 @@
 import create from 'zustand'
 
 /**
- * Safe Auth store for client + build environments.
- * - Avoids accessing window/localStorage during SSR/build.
- * - Uses VITE_API_HOST when available, falls back to http://localhost:8000
- * - Exposes helpers: setToken, setUser, logout, isAuthenticated, getAuthHeaders, buildApiUrl
+ * Auth store (Zustand)
+ * - Exposes: useAuthStore (named + default export)
+ * - Safe for build/SSR: guards window/localStorage access
+ * - Uses VITE_API_HOST (fallback to http://localhost:8000)
+ *
+ * State shape:
+ * {
+ *   accessToken: string|null,
+ *   user: object|null,
+ *   role: string|null,
+ *   isVerified: boolean,
+ *   apiHost: string,
+ *   ...helpers
+ * }
  */
 
-const DEFAULT_API_HOST =
-  (typeof import !== 'undefined' &&
-    typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    import.meta.env.VITE_API_HOST) ||
-  'http://localhost:8000'
+const DEFAULT_API_HOST = (typeof import !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_API_HOST)
+  ? import.meta.env.VITE_API_HOST
+  : 'http://localhost:8000'
 
-const readLocal = (key, parseJson = false) => {
+const safeRead = (key, parse = false) => {
   if (typeof window === 'undefined') return null
   try {
     const v = localStorage.getItem(key)
-    if (!v) return null
-    return parseJson ? JSON.parse(v) : v
+    if (v === null || v === undefined) return null
+    return parse ? JSON.parse(v) : v
   } catch (e) {
-    console.warn(`AuthStore: failed to read localStorage key "${key}"`, e)
+    // fail silently in build/SSR
     return null
   }
 }
 
-const writeLocal = (key, value) => {
+const safeWrite = (key, value) => {
   if (typeof window === 'undefined') return
   try {
-    if (value === null || typeof value === 'undefined') localStorage.removeItem(key)
-    else localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+    if (value === null || value === undefined) {
+      localStorage.removeItem(key)
+    } else if (typeof value === 'string') {
+      localStorage.setItem(key, value)
+    } else {
+      localStorage.setItem(key, JSON.stringify(value))
+    }
   } catch (e) {
-    console.warn(`AuthStore: failed to write localStorage key "${key}"`, e)
+    // ignore write errors (e.g., storage disabled)
   }
 }
 
-const useAuthStore = create((set, get) => ({
-  token: readLocal('token', false),
-  user: readLocal('user', true),
+export const useAuthStore = create((set, get) => ({
+  accessToken: safeRead('token', false),
+  user: safeRead('user', true),
+  role: safeRead('role', false) || (safeRead('user', true)?.role || null),
+  isVerified: !!(safeRead('isVerified', false) || (safeRead('user', true)?.isVerified)),
   apiHost: DEFAULT_API_HOST,
 
+  // Setters
   setToken: (token) => {
-    writeLocal('token', token)
-    set({ token })
+    safeWrite('token', token)
+    set({ accessToken: token })
   },
 
   setUser: (user) => {
-    writeLocal('user', user)
-    set({ user })
+    safeWrite('user', user)
+    // keep role & isVerified in sync
+    const role = user && user.role ? user.role : null
+    const isVerified = !!(user && user.isVerified)
+    safeWrite('role', role)
+    safeWrite('isVerified', isVerified)
+    set({ user, role, isVerified })
+  },
+
+  setRole: (role) => {
+    safeWrite('role', role)
+    set({ role })
+  },
+
+  setVerified: (val = true) => {
+    safeWrite('isVerified', !!val)
+    set({ isVerified: !!val })
   },
 
   logout: (redirectTo = '/login') => {
-    writeLocal('token', null)
-    writeLocal('user', null)
-    set({ token: null, user: null })
+    safeWrite('token', null)
+    safeWrite('user', null)
+    safeWrite('role', null)
+    safeWrite('isVerified', null)
+    set({ accessToken: null, user: null, role: null, isVerified: false })
     if (typeof window !== 'undefined') {
       try {
-        // use location.replace so back button doesn't retain protected page
+        // replace so user can't go back to protected page
         window.location.replace(redirectTo)
       } catch (e) {
-        // ignore in non-browser environments
+        // ignore in non-browser envs
       }
     }
   },
 
+  // helpers
   isAuthenticated: () => {
-    const t = get().token
-    return !!t
+    return !!get().accessToken
   },
 
   getAuthHeaders: (extra = {}) => {
-    const t = get().token
+    const t = get().accessToken
     const base = { 'Content-Type': 'application/json', ...extra }
     return t ? { Authorization: `Bearer ${t}`, ...base } : base
   },
 
-  // buildApiUrl('/api/whatever') -> "https://host/api/whatever"
+  // build full API URL from path: '/api/whatever' or 'api/..'
   buildApiUrl: (path = '') => {
-    const host = (get().apiHost || DEFAULT_API_HOST).toString()
-    const h = host.replace(/\/+$/, '')
-    const p = String(path).replace(/^\/+/, '')
-    return p ? `${h}/${p}` : h
+    const host = (get().apiHost || DEFAULT_API_HOST).toString().replace(/\/+$/, '')
+    const p = String(path || '').replace(/^\/+/, '')
+    return p ? `${host}/${p}` : host
   }
 }))
 
