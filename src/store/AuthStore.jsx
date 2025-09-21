@@ -9,7 +9,7 @@ const useAuthStore = create((set, get) => ({
   loading: true,
 
   initialize: async () => {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       await get().fetchUserProfile(session);
     } else {
