@@ -1,3 +1,4 @@
+// src/api/apiClient.js
 import { useAuthStore } from '../store/AuthStore';
 
 // Get the backend URL from the environment file
@@ -11,7 +12,8 @@ const API_HOST = import.meta.env.VITE_API_HOST;
  */
 const apiClient = async (endpoint, options = {}) => {
   // Get the access token from our global auth store
-  const { accessToken } = useAuthStore.getState();
+  // IMPORTANT: We get the token directly from the Zustand store on each call.
+  const token = useAuthStore.getState().token;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -19,10 +21,11 @@ const apiClient = async (endpoint, options = {}) => {
   };
 
   // If we have a token, add the Authorization header to the request
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Correctly construct the full URL
   const response = await fetch(`${API_HOST}${endpoint}`, {
     ...options,
     headers,
@@ -30,7 +33,7 @@ const apiClient = async (endpoint, options = {}) => {
 
   // If the response is not OK, try to parse the error and throw it
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'An error occurred' }));
+    const errorData = await response.json().catch(() => ({ message: 'An unexpected error occurred' }));
     throw new Error(errorData.detail || errorData.message || 'API request failed');
   }
 
@@ -39,7 +42,27 @@ const apiClient = async (endpoint, options = {}) => {
       return null;
   }
 
+  // For any other successful response, parse and return the JSON body.
   return response.json();
 };
+
+// --- Add HTTP method helpers for convenience ---
+
+apiClient.get = (endpoint, options = {}) => {
+  return apiClient(endpoint, { ...options, method: 'GET' });
+};
+
+apiClient.post = (endpoint, body, options = {}) => {
+  return apiClient(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) });
+};
+
+apiClient.put = (endpoint, body, options = {}) => {
+  return apiClient(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) });
+};
+
+apiClient.delete = (endpoint, options = {}) => {
+  return apiClient(endpoint, { ...options, method: 'DELETE' });
+};
+
 
 export default apiClient;
