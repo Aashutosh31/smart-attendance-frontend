@@ -1,46 +1,36 @@
+// src/components/Auth/ProtectedRoute.jsx
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/AuthStore.jsx';
 
-const ProtectedRoute = ({ allowedRoles }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, role, isVerified } = useAuthStore();
   const location = useLocation();
 
+  // 1. If user is not authenticated, redirect to login page.
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const isFaculty = role === 'faculty';
-  const isHod = role === 'hod';
-  const isVerificationPage = location.pathname === '/verify' || location.pathname === '/hod/verify';
-
-  // Handle Faculty Verification
-  if (isFaculty && !isVerified) {
-    return location.pathname === '/verify' ? <Outlet /> : <Navigate to="/verify" replace />;
-  }
-  // --- FIX --- Use the 'isVerificationPage' variable
-  if (isFaculty && isVerified && isVerificationPage) {
-    return <Navigate to="/" replace />;
-  }
-  
-  // Handle HOD Verification
-  if (isHod && !isVerified) {
-    return location.pathname === '/hod/verify' ? <Outlet /> : <Navigate to="/hod/verify" replace />;
-  }
-  // --- FIX --- Use the 'isVerificationPage' variable
-  if (isHod && isVerified && isVerificationPage) {
-    return <Navigate to="/hod" replace />;
-  }
-
-  if (allowedRoles && allowedRoles.includes(role)) {
-    return <Outlet />;
-  }
-  
+  // 2. Handle role-based access control
+  // If a list of allowedRoles is provided, check if the user's role is in it.
   if (allowedRoles && !allowedRoles.includes(role)) {
-      return <Navigate to="/unauthorized" replace />;
+    // User has a role, but not the right one for this route
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  // 3. Handle mandatory face verification for HODs and Faculty
+  const requiresVerification = role === 'faculty' || role === 'hod';
+  if (requiresVerification && !isVerified) {
+      const verificationPath = role === 'hod' ? '/hod/verify' : '/faculty/verify';
+      // If they are not already on their verification page, send them there.
+      if (location.pathname !== verificationPath) {
+          return <Navigate to={verificationPath} replace />;
+      }
   }
 
-  return <Outlet />;
+  // 4. If all checks pass, render the requested component.
+  return children;
 };
 
 export default ProtectedRoute;

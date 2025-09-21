@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
 import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
 import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
+import RoleBasedRedirect from "./components/Auth/RoleBasedRedirect.jsx"; // IMPORT THE NEW COMPONENT
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -28,7 +29,7 @@ import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
 import ManageHodsPage from "./components/Admin/ManageHods.jsx";
 import ManageCoordinatorsPage from "./components/Admin/ManageCoordinators.jsx";
-import ViewStudentsPage from "./components/Admin/ViewStudents.jsx"; // NEW
+import ViewStudentsPage from "./components/Admin/ViewStudents.jsx";
 
 // HOD
 import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
@@ -66,31 +67,35 @@ function App() {
           <Route path="/register-college" element={<CollegeRegistrationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          <Route path="/verify" element={<FacultyVerificationPage />} />
-          <Route path="/hod/verify" element={<HodVerificationPage />} />
+
+          {/* --- THE NEW REDIRECT ROUTE --- */}
+          {/* Any logged-in user trying to access the root will be redirected based on their role */}
+          <Route path="/" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
 
           {/* --- FACULTY ROUTES --- */}
-            <Route path="/" element={<FacultyDashboard />}>
+            {/* NOTE THE NEW PATHS: "/faculty" */}
+            <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>}>
               <Route index element={<DashboardOverview />} />
               <Route path="courses" element={<CoursesPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            <Route path="/faculty/verify" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyVerificationPage /></ProtectedRoute>} />
 
           {/* --- ADMIN ROUTES --- */}
-            <Route path="/admin" element={<AdminDashboard />}>
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}>
               <Route index element={<AdminReportsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
               <Route path="manage-hods" element={<ManageHodsPage />} />
               <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
-              <Route path="view-students" element={<ViewStudentsPage />} /> {/* UPDATED */}
+              <Route path="view-students" element={<ViewStudentsPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
 
           {/* --- HOD ROUTES --- */}
-            <Route path="/hod" element={<HodDashboard />}>
+            <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
               <Route index element={<FacultyAttendancePage />} />
               <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
               <Route path="manage-faculty" element={<ManageFacultyPage />} />
@@ -98,9 +103,10 @@ function App() {
               <Route path="student-reports" element={<StudentReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            <Route path="/hod/verify" element={<ProtectedRoute allowedRoles={['hod']}><HodVerificationPage /></ProtectedRoute>} />
           
           {/* --- PROGRAM COORDINATOR ROUTES --- */}
-            <Route path="/coordinator" element={<ProgramCoordinatorDashboard />}>
+            <Route path="/coordinator" element={<ProtectedRoute allowedRoles={['program_coordinator']}><ProgramCoordinatorDashboard /></ProtectedRoute>}>
               <Route index element={<AddStudentPage />} />
               <Route path="add-student" element={<AddStudentPage />} />
               <Route path="manage-courses" element={<ManageCoursesPage />} />
@@ -110,7 +116,7 @@ function App() {
             </Route>
 
           {/* --- STUDENT ROUTES --- */}
-            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
         </Routes>
       </Router>
     </>

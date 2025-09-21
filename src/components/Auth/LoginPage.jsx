@@ -35,7 +35,8 @@ const LoginPage = () => {
       });
       if (error) throw error;
       toast.success("Logged in successfully!");
-      navigate('/'); // Redirect to the main dashboard after login
+      // Navigate to the root, where RoleBasedRedirect will send the user to the correct dashboard
+      navigate('/');
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -80,7 +81,7 @@ const LoginPage = () => {
           </div>
           <div className="relative">
             <input name="password" type="password" autoComplete="current-password" required value={formData.password} onChange={handleChange} className="peer w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Password" />
-            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-blue-500" />
+            <KeyRound className="absolute left-3 top-12 -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-blue-500" />
           </div>
           <button type="submit" disabled={loading} className="w-full px-4 py-3 text-white bg-blue-600 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-blue-400 transition-colors">
             {loading ? 'Signing In...' : 'Sign In'}
