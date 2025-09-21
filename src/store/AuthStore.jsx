@@ -1,42 +1,55 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
+import apiClient from '../api/apiClient'; // Import our new API client
 
-export const useAuthStore = create((set) => ({
-  session: null,
+const useAuthStore = create((set, get) => ({
   user: null,
+  accessToken: null,
   isAuthenticated: false,
-  isVerified: false,
-  collegeId: null, // Stores the logged-in user's college ID
+  loading: true,
 
-  setSession: (session) => {
-    const user = session?.user || null;
-    set({ 
-      session, 
-      user, 
-      isAuthenticated: !!session, 
-      collegeId: user?.user_metadata?.college_id || null
+  initialize: async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (session) {
+      await get().fetchUserProfile(session);
+    } else {
+      set({ loading: false });
+    }
+    
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        get().fetchUserProfile(session);
+      } else {
+        set({ user: null, accessToken: null, isAuthenticated: false });
+      }
     });
   },
 
-  setAuthSession: (sessionData) => {
-    supabase.auth.setSession(sessionData);
-    const user = sessionData?.user || null;
-    set({
-      session: sessionData,
-      user,
-      isAuthenticated: !!sessionData,
-      collegeId: user?.user_metadata?.college_id || null
-    });
+  fetchUserProfile: async (session) => {
+    try {
+      const profile = await apiClient('/api/accounts/profile/'); // Use the apiClient
+      set({
+        user: profile,
+        accessToken: session.access_token,
+        isAuthenticated: true,
+        loading: false,
+      });
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      // If fetching the Django profile fails, we should still clear the session
+      // to prevent an inconsistent state.
+      await get().signOut(); 
+      set({ loading: false });
+    }
   },
-  
-  setVerified: () => set({ isVerified: true }),
 
-  logout: async () => {
+  signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, isAuthenticated: false, isVerified: false, collegeId: null });
+    set({ user: null, accessToken: null, isAuthenticated: false, loading: false });
   },
 }));
 
-supabase.auth.onAuthStateChange((_event, session) => {
-  useAuthStore.getState().setSession(session);
-});
+// Initialize the store right away
+useAuthStore.getState().initialize();
+
+export { useAuthStore };
