@@ -50,13 +50,15 @@ const CollegeRegistrationPage = () => {
 
       const newUserId = authData.user.id;
 
-      // Step 2: Create the college in the public table
+      // Step 2: Create the college in the Django-managed table
+      // --- THIS IS THE FIX ---
       const { data: collegeData, error: collegeError } = await supabase
-        .from('colleges')
+        .from('accounts_college') // Use the correct table name created by Django
         .insert({
-          id: formData.collegeId, // Use the user-provided ID
+          id: formData.collegeId,
           name: formData.collegeName,
           admin_id: newUserId,
+          created_at: new Date(), // Add created_at to match the Django model
         })
         .select()
         .single();
