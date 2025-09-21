@@ -1,31 +1,59 @@
-// src/stores/authstore.jsx
 import { create } from 'zustand';
+import { supabase } from '../supabaseClient';
+import { persist } from 'zustand/middleware';
 
-// Define the store's state and actions
-const useAuthStore = create((set) => ({
-  // State
-  isAuthenticated: false,
-  user: null, // Stores user data, e.g., { id, email, name }
-  token: null, // Stores the authentication token
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      // --- STATE ---
+      session: null,
+      user: null,
+      isAuthenticated: false,
+      role: null,
+      isVerified: false, 
+      loading: true,
 
-  // Actions
-  login: (userData, authToken) => set({
-    isAuthenticated: true,
-    user: userData,
-    token: authToken,
-  }),
+      // --- ACTIONS ---
+      getSession: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        set({ session, user: session?.user ?? null, isAuthenticated: !!session });
+        if (session?.user) {
+          await get().fetchProfile(session.user.id);
+        }
+        set({ loading: false });
+        return session;
+      },
 
-  logout: () => set({
-    isAuthenticated: false,
-    user: null,
-    token: null,
-  }),
+      setSession: (session) => {
+        set({ session, user: session?.user ?? null, isAuthenticated: !!session });
+        if (session?.user) {
+          get().fetchProfile(session.user.id);
+        }
+      },
 
-  // Optional: Action to update the user data
-  updateUser: (newUserData) => set((state) => ({
-    user: { ...state.user, ...newUserData },
-  })),
+      signOut: async () => {
+        await supabase.auth.signOut();
+        set({ session: null, user: null, isAuthenticated: false, role: null, isVerified: false });
+      },
 
-}));
+      fetchProfile: async (userId) => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role, is_verified')
+          .eq('id', userId)
+          .single();
 
-export default useAuthStore;
+        if (data) {
+          set({ role: data.role, isVerified: data.is_verified });
+        }
+        if (error) {
+          console.error('Error fetching profile:', error);
+        }
+      },
+    }),
+    {
+      name: 'auth-storage', 
+      getStorage: () => localStorage, 
+    }
+  )
+);
