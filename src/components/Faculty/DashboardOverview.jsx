@@ -15,7 +15,7 @@ const DashboardOverview = () => {
     const fetchOverviewData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:8000/api/analytics/overview');
+        const response = await fetch('import.meta.env.VITE_API_HOST/api/analytics/overview');
         const data = await response.json();
         setAnalytics(data);
       } catch (error) {

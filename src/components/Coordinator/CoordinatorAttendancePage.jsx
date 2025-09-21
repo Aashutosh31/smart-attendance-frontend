@@ -30,7 +30,7 @@ const CoordinatorAttendancePage = () => {
         }).toString();
         
         // Backend team needs to create this endpoint
-        const response = await fetch(`http://localhost:8000/api/coordinator/attendance?${queryParams}`, {
+        const response = await fetch(`import.meta.env.VITE_API_HOST/api/coordinator/attendance?${queryParams}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

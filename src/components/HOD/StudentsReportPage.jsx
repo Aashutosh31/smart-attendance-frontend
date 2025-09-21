@@ -20,7 +20,7 @@ const StudentReportsPage = () => {
       setIsLoading(true);
       try {
         // Backend team needs to create this endpoint for the HOD
-        const response = await fetch('http://localhost:8000/api/hod/student-reports', {
+        const response = await fetch('import.meta.env.VITE_API_HOST/api/hod/student-reports', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

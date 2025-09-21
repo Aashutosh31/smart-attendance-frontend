@@ -55,7 +55,7 @@ const FacultyVerificationPage = () => {
     const imageData = canvas.toDataURL('image/jpeg');
 
     try {
-      const response = await fetch('http://localhost:8000/api/faculty/verify-face', {
+      const response = await fetch('import.meta.env.VITE_API_HOST/api/faculty/verify-face', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

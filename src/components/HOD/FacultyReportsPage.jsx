@@ -27,7 +27,7 @@ const FacultyReportsPage = () => {
         const queryParams = new URLSearchParams(filters).toString();
         // --- BACKEND INTEGRATION ---
         // Backend team needs to create this endpoint for HOD reports
-        const response = await fetch(`http://localhost:8000/api/hod/faculty-reports?${queryParams}`, {
+        const response = await fetch(`import.meta.env.VITE_API_HOST/api/hod/faculty-reports?${queryParams}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Could not fetch faculty reports.');

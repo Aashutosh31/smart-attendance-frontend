@@ -14,57 +14,64 @@ const CollegeRegistrationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (adminPassword !== confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-    setIsLoading(true);
+// src/components/Auth/CollegeRegistrationPage.jsx
 
-    try {
-      // Step 1: Create the college record first.
-      const { error: collegeError } = await supabase
-        .from('colleges')
-        .insert({
-          id: collegeId, // Inserts the TEXT id
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setError(null);
+
+  if (password !== confirmPassword) {
+    setError("Passwords do not match");
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    // Corrected Step 1: Insert into 'accounts_college' with correct syntax [{...}] and NO address
+    const { error: collegeError } = await supabase
+      .from('accounts_college')
+      .insert([
+        {
+          id: collegeId,
           name: collegeName,
-        });
-      if (collegeError) throw collegeError;
-
-      // Step 2: Create the admin user.
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: adminEmail,
-        password: adminPassword,
-        options: {
-          data: {
-            full_name: 'Admin',
-            role: 'admin',
-            college_id: collegeId // Pass the TEXT collegeId to metadata
-          },
         },
-      });
-      if (authError) throw authError;
-      const adminUser = authData.user;
-      if (!adminUser) throw new Error("Registration failed, please try again.");
+      ]);
 
-      // Step 3: Update the college with the new admin's UUID.
-      const { error: updateCollegeError } = await supabase
-        .from('colleges')
-        .update({ admin_id: adminUser.id })
-        .eq('id', collegeId);
-      if (updateCollegeError) throw updateCollegeError;
-
-      toast.success('Registration Successful! Please check your email to verify your account.');
-      navigate('/login');
-    } catch (err) {
-      // Clean up orphaned college record on failure
-      await supabase.from('colleges').delete().eq('id', collegeId);
-      toast.error(err.message);
-    } finally {
-        setIsLoading(false);
+    if (collegeError) {
+      throw collegeError;
     }
-  };
+
+    // Step 2: Sign up the admin user
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: adminName,
+          role: 'admin',
+          college_id: collegeId,
+        },
+      },
+    });
+
+    if (signUpError) {
+      throw signUpError;
+    }
+
+    if (data.user) {
+      alert(
+        'Registration successful! Please check your email to verify your account.'
+      );
+      navigate('/login');
+    }
+  } catch (err) {
+    setError(err.message || 'An unexpected error occurred.');
+    console.error('Registration failed:', err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // JSX is unchanged
   return (

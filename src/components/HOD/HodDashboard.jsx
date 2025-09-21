@@ -13,7 +13,7 @@ const HodDashboard = () => {
   React.useEffect(() => {
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/hod/notifications', {
+            const response = await fetch('import.meta.env.VITE_API_HOST/api/hod/notifications', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Could not fetch notifications.');

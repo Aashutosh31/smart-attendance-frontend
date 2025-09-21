@@ -29,7 +29,7 @@ const CoursesPage = () => {
     try {
       // --- KEY CHANGE: Fetch only courses for this specific faculty member ---
       // Backend needs to provide this endpoint.
-      const response = await fetch('http://localhost:8000/api/faculty/me/courses', {
+      const response = await fetch('import.meta.env.VITE_API_HOST/api/faculty/me/courses', {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -60,7 +60,7 @@ const CoursesPage = () => {
     const imageData = canvas.toDataURL('image/jpeg');
 
     try {
-        const response = await fetch(`http://localhost:8000/api/faculty/courses/${selectedCourse.id}/recognize`, {
+        const response = await fetch(`import.meta.env.VITE_API_HOST/api/faculty/courses/${selectedCourse.id}/recognize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ image: imageData }),
@@ -100,7 +100,7 @@ const CoursesPage = () => {
 
     try {
         const studentIds = recognizedStudents.map(s => s.id);
-        const response = await fetch(`http://localhost:8000/api/faculty/courses/${selectedCourse.id}/attendance`, {
+        const response = await fetch(`import.meta.env.VITE_API_HOST/api/faculty/courses/${selectedCourse.id}/attendance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ studentIds }),

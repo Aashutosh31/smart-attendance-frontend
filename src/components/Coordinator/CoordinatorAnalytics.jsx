@@ -37,7 +37,7 @@ const CoordinatorAnalytics = () => {
       setIsLoading(true);
       try {
         // Backend team needs to create this endpoint
-        const response = await fetch('http://localhost:8000/api/coordinator/analytics', {
+        const response = await fetch('import.meta.env.VITE_API_HOST/api/coordinator/analytics', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('Failed to fetch analytics data.');

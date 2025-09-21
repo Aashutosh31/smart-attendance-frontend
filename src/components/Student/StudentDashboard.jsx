@@ -12,7 +12,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/student/me/attendance', {
+        const response = await fetch('import.meta.env.VITE_API_HOST/api/student/me/attendance', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

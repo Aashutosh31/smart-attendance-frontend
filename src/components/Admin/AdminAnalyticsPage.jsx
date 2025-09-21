@@ -25,7 +25,7 @@ const AdminAnalyticsPage = () => {
       setIsLoading(true);
       try {
         // Backend team needs to create this endpoint for the Admin
-        const response = await fetch('http://localhost:8000/api/admin/analytics', {
+        const response = await fetch('import.meta.env.VITE_API_HOST/api/admin/analytics', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();

@@ -41,7 +41,7 @@ const AdminReportsPage = () => {
             try {
                 // --- BACKEND INTEGRATION ---
                 // This single endpoint should return the entire nested data structure.
-                const response = await fetch('http://localhost:8000/api/admin/reports/tree', {
+                const response = await fetch('import.meta.env.VITE_API_HOST/api/admin/reports/tree', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error('Failed to fetch report data.');

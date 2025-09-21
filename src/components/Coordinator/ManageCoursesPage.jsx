@@ -23,7 +23,7 @@ const CourseModal = ({ isOpen, onClose, onCourseHandled, token, existingCourse }
     e.preventDefault();
     setIsLoading(true);
     const isEditing = !!existingCourse;
-    const url = isEditing ? `http://localhost:8000/api/admin/courses/${existingCourse.id}` : 'http://localhost:8000/api/admin/courses';
+    const url = isEditing ? `import.meta.env.VITE_API_HOST/api/admin/courses/${existingCourse.id}` : 'import.meta.env.VITE_API_HOST/api/admin/courses';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -81,7 +81,7 @@ const ManageCoursesPage = () => {
   const fetchCourses = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/courses', { // Assuming a general endpoint to get all courses
+      const response = await fetch('import.meta.env.VITE_API_HOST/api/courses', { // Assuming a general endpoint to get all courses
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch courses.');
