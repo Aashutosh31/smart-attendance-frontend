@@ -1,6 +1,8 @@
+// src/components/Auth/CollegeRegistrationPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { toast } from 'react-toastify'; // Use toast for better feedback
 
 const CollegeRegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -29,7 +31,7 @@ const CollegeRegistrationPage = () => {
         options: {
           data: {
             full_name: formData.fullName,
-            role: 'admin', // Set the user's role in metadata
+            role: 'admin',
           },
         },
       });
@@ -37,41 +39,49 @@ const CollegeRegistrationPage = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User registration failed, please try again.');
 
-      // --- This is the critical new logic ---
-      // Step 2: If user creation is successful, create the college in the public table
       const newUserId = authData.user.id;
 
+      // Step 2: Create the college in the public table
       const { data: collegeData, error: collegeError } = await supabase
         .from('colleges')
         .insert({
           name: formData.collegeName,
-          admin_id: newUserId, // Link the college to the user who just registered
-          // Add other college-specific fields here if necessary
+          admin_id: newUserId,
         })
-        .select() // Use .select() to get the created row back
-        .single(); // Use .single() as we only expect one row
+        .select()
+        .single();
 
       if (collegeError) {
-        // IMPORTANT: If college creation fails, we should delete the orphaned user
-        // This is a cleanup step to prevent inconsistent data.
+        // Cleanup: delete the orphaned user if college creation fails
         await supabase.auth.admin.deleteUser(newUserId);
         throw collegeError;
       }
       
-      // If everything is successful, store the new college ID for the login sync
-      localStorage.setItem('collegeId', collegeData.id);
+      // --- THIS IS THE CRITICAL NEW STEP ---
+      // Step 3: Update the admin user's metadata to include their new college ID
+      const { error: updateUserError } = await supabase.auth.admin.updateUserById(
+        newUserId,
+        { user_metadata: { ...authData.user.user_metadata, college_id: collegeData.id } }
+      );
 
-      alert('Registration successful! Please check your email to verify your account before logging in.');
+      if (updateUserError) {
+          // If this fails, we have an inconsistent state. It's complex to roll back,
+          // so for now, we'll just log the error and inform the user.
+          throw new Error("Failed to link admin user to the college. Please contact support.");
+      }
+
+      toast.success('Registration successful! Please check your email to verify your account.');
       navigate('/login');
 
     } catch (error) {
       console.error('Registration Error:', error);
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // ... JSX remains the same
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">

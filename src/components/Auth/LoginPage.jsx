@@ -1,7 +1,8 @@
+// src/components/Auth/LoginPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import apiClient from '../../api/apiClient';
+// REMOVE apiClient import, it's not needed here
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -20,32 +21,16 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) throw error;
 
-      // --- ADDED PROFILE SYNC LOGIC ---
-      const collegeId = localStorage.getItem('collegeId'); // Get ID saved during registration
-
-      if (collegeId) {
-        try {
-          await apiClient.post('/accounts/sync-profile/', { college_id: collegeId });
-          console.log('User profile synced with backend successfully.');
-        } catch (syncError) {
-          console.error("Fatal: Failed to sync user profile.", syncError.response?.data || syncError.message);
-          await supabase.auth.signOut();
-          alert("Could not initialize your account profile. Please try logging in again.");
-          setLoading(false);
-          return;
-        }
-      } else {
-        console.warn("No collegeId found in localStorage to sync profile.");
-      }
-      // --- END OF PROFILE SYNC LOGIC ---
-
+      // --- ALL PROFILE SYNC LOGIC IS REMOVED FROM HERE ---
+      // The backend will now handle this automatically on the first API call.
+      
       navigate('/');
 
     } catch (error) {
@@ -55,6 +40,7 @@ const LoginPage = () => {
     }
   };
 
+  // ... JSX remains the same
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
