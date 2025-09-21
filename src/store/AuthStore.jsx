@@ -1,34 +1,26 @@
-import create from 'zustand'
+import { create } from 'zustand'
 
 /**
  * Auth store (Zustand)
- * - Exposes: useAuthStore (named + default export)
- * - Safe for build/SSR: guards window/localStorage access
+ * - Safe for SSR/build: guards window/localStorage access
  * - Uses VITE_API_HOST (fallback to http://localhost:8000)
- *
- * State shape:
- * {
- *   accessToken: string|null,
- *   user: object|null,
- *   role: string|null,
- *   isVerified: boolean,
- *   apiHost: string,
- *   ...helpers
- * }
+ * - Exposes: accessToken, user, role, isVerified, apiHost, helpers
  */
 
-const DEFAULT_API_HOST = (typeof import !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_API_HOST)
-  ? import.meta.env.VITE_API_HOST
-  : 'http://localhost:8000'
+const DEFAULT_API_HOST =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env &&
+  import.meta.env.VITE_API_HOST
+    ? import.meta.env.VITE_API_HOST
+    : 'http://localhost:8000'
 
 const safeRead = (key, parse = false) => {
   if (typeof window === 'undefined') return null
   try {
-    const v = localStorage.getItem(key)
+    const v = window.localStorage.getItem(key)
     if (v === null || v === undefined) return null
     return parse ? JSON.parse(v) : v
-  } catch (e) {
-    // fail silently in build/SSR
+  } catch {
     return null
   }
 }
@@ -37,25 +29,24 @@ const safeWrite = (key, value) => {
   if (typeof window === 'undefined') return
   try {
     if (value === null || value === undefined) {
-      localStorage.removeItem(key)
+      window.localStorage.removeItem(key)
     } else if (typeof value === 'string') {
-      localStorage.setItem(key, value)
+      window.localStorage.setItem(key, value)
     } else {
-      localStorage.setItem(key, JSON.stringify(value))
+      window.localStorage.setItem(key, JSON.stringify(value))
     }
-  } catch (e) {
-    // ignore write errors (e.g., storage disabled)
+  } catch {
+    // ignore
   }
 }
 
-export const useAuthStore = create((set, get) => ({
+const useAuthStore = create((set, get) => ({
   accessToken: safeRead('token', false),
   user: safeRead('user', true),
-  role: safeRead('role', false) || (safeRead('user', true)?.role || null),
+  role: safeRead('role', false) || (safeRead('user', true)?.role ?? null),
   isVerified: !!(safeRead('isVerified', false) || (safeRead('user', true)?.isVerified)),
   apiHost: DEFAULT_API_HOST,
 
-  // Setters
   setToken: (token) => {
     safeWrite('token', token)
     set({ accessToken: token })
@@ -63,7 +54,6 @@ export const useAuthStore = create((set, get) => ({
 
   setUser: (user) => {
     safeWrite('user', user)
-    // keep role & isVerified in sync
     const role = user && user.role ? user.role : null
     const isVerified = !!(user && user.isVerified)
     safeWrite('role', role)
@@ -88,19 +78,11 @@ export const useAuthStore = create((set, get) => ({
     safeWrite('isVerified', null)
     set({ accessToken: null, user: null, role: null, isVerified: false })
     if (typeof window !== 'undefined') {
-      try {
-        // replace so user can't go back to protected page
-        window.location.replace(redirectTo)
-      } catch (e) {
-        // ignore in non-browser envs
-      }
+      window.location.replace(redirectTo)
     }
   },
 
-  // helpers
-  isAuthenticated: () => {
-    return !!get().accessToken
-  },
+  isAuthenticated: () => !!get().accessToken,
 
   getAuthHeaders: (extra = {}) => {
     const t = get().accessToken
@@ -108,9 +90,8 @@ export const useAuthStore = create((set, get) => ({
     return t ? { Authorization: `Bearer ${t}`, ...base } : base
   },
 
-  // build full API URL from path: '/api/whatever' or 'api/..'
   buildApiUrl: (path = '') => {
-    const host = (get().apiHost || DEFAULT_API_HOST).toString().replace(/\/+$/, '')
+    const host = (get().apiHost || DEFAULT_API_HOST).replace(/\/+$/, '')
     const p = String(path || '').replace(/^\/+/, '')
     return p ? `${host}/${p}` : host
   }
