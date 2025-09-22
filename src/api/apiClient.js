@@ -1,7 +1,7 @@
 // src/api/apiClient.js
 
 import axios from 'axios';
-import useAuthStore from '../store/AuthStore'; // Assuming your Zustand store is here
+import { useAuthStore } from '../store/AuthStore.jsx'; // <-- THE FIX IS HERE
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // Your Django API URL
@@ -10,7 +10,6 @@ const apiClient = axios.create({
   },
 });
 
-// THIS IS THE IMPORTANT PART
 // This "interceptor" runs before every single request is sent.
 apiClient.interceptors.request.use(
   (config) => {
