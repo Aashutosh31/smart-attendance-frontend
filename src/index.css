@@ -1,28 +1,44 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Add these new styles for a modern background */
-@layer base {
-  body {
-    @apply bg-gray-50 dark:bg-gray-900;
+@layer components {
+  /* Main background color for the app */
+  .app-bg {
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   }
-}
 
-.gradient-bg {
-  background: linear-gradient(-45deg, #23a6d5, #23d5ab, #e73c7e, #ee7752);
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
-}
+  /* --- CORRECTED BUTTON STYLES --- */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none h-10 py-2 px-4;
+  }
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700/90;
+  }
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-800 hover:bg-gray-300/80 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600/80;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700/90;
+  }
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
+  /* --- CORRECTED INPUT FIELD STYLES --- */
+  /* These will be applied automatically by the @tailwindcss/forms plugin */
+  .input-style {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white;
   }
-  50% {
-    background-position: 100% 50%;
+
+  /* Card and Modal Styles */
+  .card {
+    @apply bg-white dark:bg-gray-800 shadow-md rounded-lg;
   }
-  100% {
-    background-position: 0% 50%;
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50;
+  }
+
+  .modal-content {
+    @apply card p-6 rounded-lg shadow-xl w-full max-w-md;
   }
 }

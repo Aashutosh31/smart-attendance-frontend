@@ -6,7 +6,7 @@ import apiClient from '../../api/apiClient.js'; // <-- Use apiClient
 import { supabase } from '../../supabaseClient'; // Keep for fetching list
 
 const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
-  const [formData, setFormData] = useState({ fullName: '', email: '', department: '', password: '' });
+  const [formData, setFormData] = useState({ fullName: '', email: '', course: '', year: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -15,30 +15,30 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
+    if (formData.password !== formData.confirmPassword) {
+      return toast.error("Passwords do not match!");
     }
     setIsLoading(true);
 
     const payload = {
       email: formData.email,
       password: formData.password,
+      confirm_password: formData.confirmPassword,
       full_name: formData.fullName,
-      department: formData.department,
-      role: 'program_coordinator', // Hardcode the role
+      course: formData.course,
+      year: parseInt(formData.year, 10), // Ensure year is an integer
+      role: 'program_coordinator',
     };
 
     try {
+      // CORRECTED URL
       await apiClient.post('/api/accounts/users/create/', payload);
       toast.success('Program Coordinator added successfully!');
       onCoordinatorAdded();
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "An unexpected error occurred.";
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.error || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
-      setFormData({ fullName: '', email: '', department: '', password: '' });
       onClose();
     }
   };
@@ -46,27 +46,16 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Add New Coordinator</h2>
+    <div className="modal-overlay">
+        <div className="modal-content">
+            <h2 className="text-2xl font-bold mb-4">Add New Coordinator</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Inputs for fullName, email, department, password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                  <input type="text" name="fullName" required value={formData.fullName} onChange={handleChange} className="mt-1 block w-full input-style" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="mt-1 block w-full input-style" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
-                  <input type="text" name="department" value={formData.department} onChange={handleChange} className="mt-1 block w-full input-style" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                  <input type="password" name="password" required value={formData.password} onChange={handleChange} className="mt-1 block w-full input-style" />
-                </div>
+                <input type="text" name="fullName" required value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="input-style" />
+                <input type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="Email" className="input-style" />
+                <input type="text" name="course" required value={formData.course} onChange={handleChange} placeholder="Course (e.g., B.Tech CSE)" className="input-style" />
+                <input type="number" name="year" required value={formData.year} onChange={handleChange} placeholder="Year (e.g., 1, 2, 3)" className="input-style" />
+                <input type="password" name="password" required value={formData.password} onChange={handleChange} placeholder="Password" className="input-style" />
+                <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" className="input-style" />
                 <div className="flex justify-end space-x-2 pt-4">
                     <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
                     <button type="submit" disabled={isLoading} className="btn-primary">
