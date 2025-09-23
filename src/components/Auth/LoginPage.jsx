@@ -73,15 +73,38 @@ const LoginPage = () => {
           </div>
 
           {/* Google login with interactive glow effects */}
-          <div className="mb-6">
-            <button
-              onClick={handleGoogleLogin}
-              className="google-btn w-full flex items-center justify-center gap-3 px-4 py-3.5 text-white font-medium bg-transparent rounded-lg"
-            >
-              <GoogleIcon className="w-5 h-5" />
-              Sign in with Google
-            </button>
-          </div>
+<div className="mb-6">
+  <button
+    onClick={handleGoogleLogin}
+    className="
+      relative w-full flex items-center justify-center gap-3 px-5 py-3.5 
+      font-medium rounded-xl overflow-hidden
+      bg-slate-900 backdrop-blur-md
+      text-gray-200 dark:text-white
+      border border-white shadow-[0_0_6px_rgba(255,255,255,0.4)]
+      transition-all duration-300
+      hover:shadow-[0_0_8px_3px_rgba(255,192,203,0.8)]
+      active:shadow-[0_0_18px_3px_rgba(0,255,127,0.8)]
+    "
+  >
+    <span className="relative flex items-center gap-3 z-10">
+      {/* Google Original G Logo */}
+      <svg className="w-5 h-5" viewBox="0 0 533.5 544.3">
+        <path fill="#4285F4" d="M533.5 278.4c0-17.4-1.6-34.1-4.7-50.4H272v95.4h147c-6.4 34.6-25.7 63.9-55 83.4l89 69.1c52.1-48 80.5-118.7 80.5-197.5z"/>
+        <path fill="#34A853" d="M272 544.3c73.6 0 135.4-24.4 180.6-66.3l-89-69.1c-24.8 16.6-56.5 26.4-91.6 26.4-70 0-129.3-47.3-150.6-110.7l-92 71c41.5 81.5 126.2 148.7 243 148.7z"/>
+        <path fill="#FBBC05" d="M121.4 324.6c-10.3-30.7-10.3-63.6 0-94.3l-92-71c-40.1 79.3-40.1 171.2 0 250.5l92-71z"/>
+        <path fill="#EA4335" d="M272 107.7c39.9 0 75.7 13.8 104 40.7l78-78C407.4 24.8 345.6 0 272 0 155.2 0 70.5 67.2 29 148.7l92 71C142.7 155 202 107.7 272 107.7z"/>
+      </svg>
+
+      {/* Text styled like Google Sign-in */}
+      <span className="text-[15px] font-semibold tracking-wide">
+        Sign in with Google
+      </span>
+    </span>
+  </button>
+</div>
+
+
 
           <div className="flex items-center my-6">
             <div className="flex-1 h-px bg-slate-700/50"></div>
