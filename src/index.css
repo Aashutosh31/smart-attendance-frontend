@@ -42,3 +42,32 @@
     @apply card p-6 rounded-lg shadow-xl w-full max-w-md;
   }
 }
+/* Add to your existing index.css after the current styles */
+
+@layer components {
+  /* Dark mode glassmorphism enhancements */
+  .dark .card {
+    @apply bg-slate-900/60 border border-slate-800/50;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  .dark .btn-primary {
+    @apply bg-gradient-to-r from-fuchsia-600 to-purple-600;
+    box-shadow: 0 10px 25px -5px rgba(217, 70, 239, 0.4);
+  }
+
+  .dark .btn-primary:hover {
+    box-shadow: 0 20px 40px -5px rgba(217, 70, 239, 0.6);
+  }
+
+  .dark .input-style {
+    @apply bg-slate-900/60 border-slate-700/50;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .input-style:focus {
+    @apply border-fuchsia-500 ring-fuchsia-500/30;
+    box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.15);
+  }
+}
