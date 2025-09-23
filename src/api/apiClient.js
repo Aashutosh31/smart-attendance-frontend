@@ -1,10 +1,11 @@
 // src/api/apiClient.js
 
 import axios from 'axios';
-import { useAuthStore } from '../store/AuthStore.jsx'; // <-- THE FIX IS HERE
+import { useAuthStore } from '../store/AuthStore.jsx';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // Your Django API URL
+  // --- FIX: Pointing directly to the default Django server address ---
+  baseURL: 'http://127.0.0.1:8000', // Your Django API URL
   headers: {
     'Content-Type': 'application/json',
   },

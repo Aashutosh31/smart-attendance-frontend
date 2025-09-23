@@ -10,7 +10,8 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
     fullName: '',
     email: '',
     department: '',
-    password: ''
+    password: '',
+    confirmPassword: '' // State for confirm password
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,6 +21,10 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
     if (formData.password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
@@ -29,22 +34,26 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
     const payload = {
       email: formData.email,
       password: formData.password,
+      password2: formData.confirmPassword, // Backend expects 'password2'
       full_name: formData.fullName,
       department: formData.department,
       role: 'hod',
     };
 
     try {
+      // --- FIX: This is the correct and final URL for the API endpoint ---
       await apiClient.post('/api/accounts/users/create/', payload);
+      
       toast.success('HOD added successfully!');
       onHodAdded();
+      setFormData({ fullName: '', email: '', department: '', password: '', confirmPassword: '' });
+      onClose();
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "An unexpected error occurred.";
+      // This will now catch other errors, like if the email already exists
+      const errorMessage = error.response?.data?.error || error.response?.data?.email?.[0] || "An unexpected error occurred.";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
-      setFormData({ fullName: '', email: '', department: '', password: '' });
-      onClose();
     }
   };
 
@@ -131,6 +140,20 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
+            
+            {/* Confirm Password Input */}
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
+                required
+              />
+            </div>
 
             {/* Submit Button */}
             <button
@@ -180,6 +203,8 @@ const ManageHods = () => {
     }
 
     try {
+      // This part for deleting from Supabase auth might need to be a server-side function
+      // For now, it just deletes from the 'users' table
       const { error } = await supabase
         .from('users')
         .delete()
