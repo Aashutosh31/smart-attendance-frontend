@@ -7,7 +7,7 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
 import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
 import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
-import RoleBasedRedirect from "./components/Auth/RoleBasedRedirect.jsx"; // IMPORT THE NEW COMPONENT
+import RoleBasedRedirect from "./components/Auth/RoleBasedRedirect.jsx"; 
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -28,7 +28,6 @@ import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
 import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
 import ManageHodsPage from "./components/Admin/ManageHods.jsx";
-import CoordinatorAnalytics from "./components/Admin/CoordinatorAnalytics.jsx";
 import ViewStudentsPage from "./components/Admin/ViewStudents.jsx";
 
 // HOD
@@ -42,6 +41,8 @@ import ManageCoordinatorsPage from "./components/HOD/ManageCoordinators.jsx";
 import AddStudentPage from "./components/Coordinator/AddStudentPage.jsx";
 import ManageCoursesPage from "./components/Coordinator/ManageCoursesPage.jsx";
 import CoordinatorAttendancePage from "./components/Coordinator/CoordinatorAttendancePage.jsx";
+import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.jsx";
+
 
 
 // Other imports
@@ -88,7 +89,6 @@ function App() {
             <Route index element={<AdminReportsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="manage-hods" element={<ManageHodsPage />} />
-            <Route path="coordinator-analytics" element={<CoordinatorAnalytics/>} />
             <Route path="manage-faculty" element={<ManageFacultyPage />} />
             <Route path="view-students" element={<ViewStudentsPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
@@ -113,6 +113,7 @@ function App() {
             <Route path="add-student" element={<AddStudentPage />} />
             <Route path="manage-courses" element={<ManageCoursesPage />} />
             <Route path="view-attendance" element={<CoordinatorAttendancePage />} />
+            <Route path="coordinator-analytics" element={<CoordinatorAnalytics />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 
