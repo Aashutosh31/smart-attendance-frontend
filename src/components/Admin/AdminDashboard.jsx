@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   const navItems = [
     { to: "/admin/reports", name: "Reports", icon: BarChart3 },
     { to: "/admin/manage-hods", name: "Manage HODs", icon: UserSquare },
-    { to: "/admin/manage-coordinators", name: "Manage Coordinators", icon: UserSquare },
+    { to: "/admin/coordinator-analytics", name: "Coordinator Analytics", icon: UserSquare },
     { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
     { to: "/admin/view-students", name: "View Students", icon: Users },
     { to: "/admin/analytics", name: "Analytics", icon: BarChart3 },

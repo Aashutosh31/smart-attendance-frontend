@@ -28,7 +28,7 @@ import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
 import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
 import ManageHodsPage from "./components/Admin/ManageHods.jsx";
-import ManageCoordinatorsPage from "./components/Admin/ManageCoordinators.jsx";
+import CoordinatorAnalytics from "./components/Admin/CoordinatorAnalytics.jsx";
 import ViewStudentsPage from "./components/Admin/ViewStudents.jsx";
 
 // HOD
@@ -36,14 +36,15 @@ import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
 import FacultyAttendancePage from "./components/HOD/FacultyAttendancePage.jsx";
 import FacultyReportsPage from "./components/HOD/FacultyReportsPage.jsx";
 import StudentReportsPage from "./components/HOD/StudentsReportPage.jsx"; 
+import ManageCoordinatorsPage from "./components/HOD/ManageCoordinators.jsx";
 
 // Coordinator
 import AddStudentPage from "./components/Coordinator/AddStudentPage.jsx";
 import ManageCoursesPage from "./components/Coordinator/ManageCoursesPage.jsx";
 import CoordinatorAttendancePage from "./components/Coordinator/CoordinatorAttendancePage.jsx";
-import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.jsx";
 
-//other imports
+
+// Other imports
 import "./index.css";
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 import React, { useEffect } from 'react';
@@ -75,45 +76,45 @@ function App() {
           {/* --- FACULTY ROUTES --- */}
             {/* NOTE THE NEW PATHS: "/faculty" */}
             <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="courses" element={<CoursesPage />} />
-              <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+            <Route index element={<DashboardOverview />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
             <Route path="/faculty/verify" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyVerificationPage /></ProtectedRoute>} />
 
           {/* --- ADMIN ROUTES --- */}
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}>
-              <Route index element={<AdminReportsPage />} />
-              <Route path="reports" element={<AdminReportsPage />} />
-              <Route path="manage-hods" element={<ManageHodsPage />} />
-              <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
-              <Route path="manage-faculty" element={<ManageFacultyPage />} />
-              <Route path="view-students" element={<ViewStudentsPage />} />
-              <Route path="analytics" element={<AdminAnalyticsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+            <Route index element={<AdminReportsPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="manage-hods" element={<ManageHodsPage />} />
+            <Route path="coordinator-analytics" element={<CoordinatorAnalytics/>} />
+            <Route path="manage-faculty" element={<ManageFacultyPage />} />
+            <Route path="view-students" element={<ViewStudentsPage />} />
+            <Route path="analytics" element={<AdminAnalyticsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
 
           {/* --- HOD ROUTES --- */}
             <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
-              <Route index element={<FacultyAttendancePage />} />
-              <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
-              <Route path="manage-faculty" element={<ManageFacultyPage />} />
-              <Route path="faculty-reports" element={<FacultyReportsPage />} />
-              <Route path="student-reports" element={<StudentReportsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+            <Route index element={<FacultyAttendancePage />} />
+            <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
+            <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
+            <Route path="manage-faculty" element={<ManageFacultyPage />} />
+            <Route path="faculty-reports" element={<FacultyReportsPage />} />
+            <Route path="student-reports" element={<StudentReportsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
             <Route path="/hod/verify" element={<ProtectedRoute allowedRoles={['hod']}><HodVerificationPage /></ProtectedRoute>} />
           
           {/* --- PROGRAM COORDINATOR ROUTES --- */}
             <Route path="/coordinator" element={<ProtectedRoute allowedRoles={['program_coordinator']}><ProgramCoordinatorDashboard /></ProtectedRoute>}>
-              <Route index element={<AddStudentPage />} />
-              <Route path="add-student" element={<AddStudentPage />} />
-              <Route path="manage-courses" element={<ManageCoursesPage />} />
-              <Route path="view-attendance" element={<CoordinatorAttendancePage />} />
-              <Route path="analytics" element={<CoordinatorAnalytics />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
+            <Route index element={<AddStudentPage />} />
+            <Route path="add-student" element={<AddStudentPage />} />
+            <Route path="manage-courses" element={<ManageCoursesPage />} />
+            <Route path="view-attendance" element={<CoordinatorAttendancePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
 
           {/* --- STUDENT ROUTES --- */}
             <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />

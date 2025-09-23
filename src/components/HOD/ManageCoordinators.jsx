@@ -1,11 +1,11 @@
-// src/components/Admin/ManageCoordinators.jsx
+// src/components/HOD/ManageCoordinators.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 // Update this line
 import { UserPlus, KeyRound, Trash2, X, Mail, User, Search, GraduationCap, Calendar, ChevronDown } from 'lucide-react';
 
 import { toast } from 'react-toastify';
 import apiClient from '../../api/apiClient.js';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../supabaseClient.js';
 
 
 
