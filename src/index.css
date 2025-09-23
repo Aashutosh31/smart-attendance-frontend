@@ -67,3 +67,49 @@
   }
 }
 
+  /* DARK MODE ONLY: Glass card effects */
+  .dark .glass-card {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    box-shadow: 
+      0 0 8px rgba(255, 255, 255, 0.08),
+      0 0 12px rgba(255, 255, 255, 0.05),
+      inset 0 0 6px rgba(255, 255, 255, 0.03);
+  }
+
+  /* DARK MODE ONLY: Modal border animation */
+  .dark .snake-border-modal {
+    position: relative;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(236, 72, 153, 0.3) 40%,
+      rgba(147, 51, 234, 0.5) 50%,
+      rgba(59, 130, 246, 0.3) 60%,
+      transparent 70%
+    );
+    background-size: 400% 400%;
+    animation: border-move 4s linear infinite;
+    border-radius: 1rem;
+    padding: 2px;
+  }
+  
+  .dark .snake-border-modal > div {
+    border-radius: calc(1rem - 2px);
+  }
+
+  /* LIGHT MODE: Simple card styles */
+  .glass-card {
+    @apply bg-white border border-gray-200 shadow-md;
+  }
+  
+  .snake-border-modal {
+    @apply bg-white border border-gray-200 shadow-lg;
+    border-radius: 1rem;
+    padding: 2px;
+  }
+  
+  .snake-border-modal > div {
+    border-radius: calc(1rem - 2px);
+  }

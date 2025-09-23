@@ -1,63 +1,111 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../store/AuthStore.jsx';
-import { BarChart, Clock, Users, Download } from 'lucide-react';
-
-// A simple placeholder for a chart
-const ChartPlaceholder = ({ title, description }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">{title}</h4>
-            <p className="text-sm text-gray-500">{description}</p>
-        </div>
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <BarChart className="w-12 h-12 text-gray-300" />
-        </div>
-    </div>
-);
+import { BarChart3, Users, GraduationCap, TrendingUp, Activity } from 'lucide-react';
 
 const AdminAnalyticsPage = () => {
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const token = useAuthStore((state) => state.token);
+  const [analytics, setAnalytics] = useState({
+    totalUsers: 0,
+    totalStudents: 0,
+    totalFaculty: 0,
+    totalHODs: 0,
+    recentActivity: []
+  });
 
   useEffect(() => {
-    const fetchAdminAnalytics = async () => {
-      setIsLoading(true);
-      try {
-        // Backend team needs to create this endpoint for the Admin
-        const response = await fetch('import.meta.env.VITE_API_HOST/api/admin/analytics', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error("Failed to fetch admin analytics:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAdminAnalytics();
-  }, [token]);
+    // Fetch analytics data here
+    setAnalytics({
+      totalUsers: 450,
+      totalStudents: 350,
+      totalFaculty: 45,
+      totalHODs: 12,
+      recentActivity: [
+        { action: 'New student registered', time: '2 minutes ago' },
+        { action: 'Faculty added to CS dept', time: '1 hour ago' },
+        { action: 'HOD updated profile', time: '3 hours ago' }
+      ]
+    });
+  }, []);
+
+  const StatCard = ({ title, value, icon: Icon, color, trend }) => (
+    <div className="glass-card p-6 rounded-2xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-600 dark:text-slate-400 text-sm font-medium">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{value}</p>
+          {trend && (
+            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              +{trend}% from last month
+            </p>
+          )}
+        </div>
+        <div className={`p-3 rounded-xl ${color}`}>
+          <Icon className="h-8 w-8 text-white" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Global Analytics</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
-            <Download size={18} />
-            <span>Export All Reports</span>
-        </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-card p-6 rounded-2xl">
+        <div className="flex items-center gap-3 mb-2">
+          <BarChart3 className="h-8 w-8 text-purple-400" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            Analytics Dashboard
+          </h1>
+        </div>
+        <p className="text-gray-600 dark:text-slate-400">
+          Overview of your institution's performance and metrics
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder 
-            title="Faculty Delay Report"
-            description="Average arrival delay and total late days for all faculty."
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Users"
+          value={analytics.totalUsers}
+          icon={Users}
+          color="bg-gradient-to-r from-blue-500 to-blue-600"
+          trend={12}
         />
-        <ChartPlaceholder 
-            title="Student Attendance Report"
-            description="Monthly and department-wise average attendance."
+        <StatCard
+          title="Students"
+          value={analytics.totalStudents}
+          icon={GraduationCap}
+          color="bg-gradient-to-r from-green-500 to-green-600"
+          trend={8}
         />
+        <StatCard
+          title="Faculty"
+          value={analytics.totalFaculty}
+          icon={Users}
+          color="bg-gradient-to-r from-purple-500 to-purple-600"
+          trend={15}
+        />
+        <StatCard
+          title="HODs"
+          value={analytics.totalHODs}
+          icon={Users}
+          color="bg-gradient-to-r from-pink-500 to-pink-600"
+          trend={5}
+        />
+      </div>
+
+      {/* Recent Activity */}
+      <div className="glass-card p-6 rounded-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <Activity className="h-6 w-6 text-purple-400" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
+        </div>
+        <div className="space-y-3">
+          {analytics.recentActivity.map((activity, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/30 rounded-lg">
+              <span className="text-gray-900 dark:text-white">{activity.action}</span>
+              <span className="text-gray-500 dark:text-slate-400 text-sm">{activity.time}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
