@@ -11,21 +11,18 @@ const getSupabaseToken = async () => {
 };
 
 const apiClient = {
-  syncProfile: async (collegeId, turnstileToken) => {
-    const token = await getSupabaseToken();
-    const response = await fetch(`${API_URL}/sync-profile/`, {
+  // This new function sends all registration data to your new backend endpoint
+  registerCollege: async (formData) => {
+    const response = await fetch(`${API_URL}/register-college/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        college_id: collegeId,
-        turnstile_token: turnstileToken,
-      }),
+      body: JSON.stringify(formData),
     });
     if (!response.ok) {
-      throw new Error("Failed to sync profile with backend.");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to register college.");
     }
     return response.json();
   },

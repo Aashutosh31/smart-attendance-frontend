@@ -3,10 +3,9 @@
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
 import { toast } from "react-toastify";
 import { Building2, KeyRound, Mail, User, Shield } from "lucide-react";
-import apiClient from "../../api/apiClient"; // Import the apiClient
+import apiClient from "../../api/apiClient"; // Make sure this is imported
 
 const CollegeRegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -32,25 +31,14 @@ const CollegeRegistrationPage = () => {
     setLoading(true);
 
     try {
-      // Step 1: Sign up the user with Supabase
-      const { user, error: signUpError } = await supabase.auth.signUp({
+      // The backend now handles everything, so we just send the form data.
+      await apiClient.registerCollege({
+        collegeId: formData.collegeId,
+        collegeName: formData.collegeName,
+        fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-          },
-        },
       });
-
-      if (signUpError) {
-        throw new Error(signUpError.message);
-      }
-
-      // Step 2: Sync the user profile with your Django backend
-      // For now, we'll pass a placeholder for the turnstile token.
-      // In a real application, you would integrate a CAPTCHA service.
-      await apiClient.syncProfile(formData.collegeId, "dummy-turnstile-token");
 
       toast.success("Registration successful! You can now log in.");
       navigate("/login");
