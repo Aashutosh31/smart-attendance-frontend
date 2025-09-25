@@ -6,7 +6,7 @@ const API_URL = "https://django-bice-seven.vercel.app/api/register-college/";
 const apiClient = {
   registerCollege: async (formData) => {
     // This endpoint doesn't need a token, so it remains unchanged.
-    const response = await fetch(`${API_URL}/register-college/`, {
+    const response = await fetch(`${API_URL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
