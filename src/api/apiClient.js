@@ -1,7 +1,7 @@
 // src/api/apiClient.js
 import { useAuthStore } from "../store/AuthStore"; // Import the auth store
 
-const API_URL = "https://paradigmshiftershcc-django.vercel.app/api/register-college";
+const API_URL = "https://django-bice-seven.vercel.app/api";
 
 const apiClient = {
   registerCollege: async (formData) => {
