@@ -1,6 +1,3 @@
 # supabase/config.toml
 # This is the main configuration file for your Supabase project.
 
-# supabase/config.toml
-[functions.register-college-and-admin]
-entrypoint = "functions/register-college-and-admin/index.js"

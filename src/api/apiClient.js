@@ -1,32 +1,65 @@
 // src/api/apiClient.js
+import { supabase } from "../supabaseClient";
 
-import axios from 'axios';
-import { useAuthStore } from '../store/AuthStore.jsx';
+const API_URL = "https://paradigmshiftershcc-django.vercel.app/api/accounts"; // Replace with your actual backend URL
 
-const apiClient = axios.create({
-  // --- FIX: Pointing directly to the default Django server address ---
-  baseURL: 'http://127.0.0.1:8000', // Your Django API URL
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const getSupabaseToken = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.access_token;
+};
 
-// This "interceptor" runs before every single request is sent.
-apiClient.interceptors.request.use(
-  (config) => {
-    // Get the token from your Zustand store
-    const token = useAuthStore.getState().session?.access_token;
-
-    if (token) {
-      // If the token exists, add it to the 'Authorization' header
-      config.headers['Authorization'] = `Bearer ${token}`;
+const apiClient = {
+  syncProfile: async (collegeId, turnstileToken) => {
+    const token = await getSupabaseToken();
+    const response = await fetch(`${API_URL}/sync-profile/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        college_id: collegeId,
+        turnstile_token: turnstileToken,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to sync profile with backend.");
     }
-    
-    return config;
+    return response.json();
   },
-  (error) => {
-    return Promise.reject(error);
+
+  createUser: async (userData) => {
+    const token = await getSupabaseToken();
+    const response = await fetch(`${API_URL}/create-user/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user.');
+    }
+    return response.json();
+  },
+
+  getCurrentUser: async () => {
+    const token = await getSupabaseToken();
+    const response = await fetch(`${API_URL}/me/`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    if (!response.ok) {
+        throw new Error('Failed to fetch user data.');
+    }
+    return response.json();
   }
-);
+};
 
 export default apiClient;
