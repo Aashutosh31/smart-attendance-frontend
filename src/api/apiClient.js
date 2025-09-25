@@ -1,18 +1,11 @@
 // src/api/apiClient.js
-import { supabase } from "../supabaseClient";
+import { useAuthStore } from "../store/AuthStore"; // Import the auth store
 
-const API_URL = "https://paradigmshiftershcc-django.vercel.app/api/accounts"; // Replace with your actual backend URL
-
-const getSupabaseToken = async () => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token;
-};
+const API_URL = "https://paradigmshiftershcc-django.vercel.app/api/accounts";
 
 const apiClient = {
-  // This new function sends all registration data to your new backend endpoint
   registerCollege: async (formData) => {
+    // This endpoint doesn't need a token, so it remains unchanged.
     const response = await fetch(`${API_URL}/register-college/`, {
       method: "POST",
       headers: {
@@ -28,11 +21,18 @@ const apiClient = {
   },
 
   createUser: async (userData) => {
-    const token = await getSupabaseToken();
+    // Get the token directly from the auth store's state
+    const token = useAuthStore.getState().session?.access_token;
+
+    if (!token) {
+        throw new Error("Authentication token not found. Please log in.");
+    }
+
     const response = await fetch(`${API_URL}/create-user/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            // Use the token from the store
             'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(userData),
@@ -45,10 +45,17 @@ const apiClient = {
   },
 
   getCurrentUser: async () => {
-    const token = await getSupabaseToken();
+    // Get the token directly from the auth store's state
+    const token = useAuthStore.getState().session?.access_token;
+
+    if (!token) {
+        throw new Error("Authentication token not found. Please log in.");
+    }
+
     const response = await fetch(`${API_URL}/me/`, {
         method: 'GET',
         headers: {
+            // Use the token from the store
             'Authorization': `Bearer ${token}`,
         },
     });
