@@ -28,7 +28,6 @@ const ProgramCoordinatorDashboard = () => {
 
   const navItems = [
     { to: "/coordinator/add-student", name: "Add Student", icon: UserPlus },
-    { to: "/coordinator/manage-courses", name: "Manage Courses", icon: BookOpen },
     { to: "/coordinator/view-attendance", name: "View Attendance", icon: Users },
     { to: "/coordinator/coordinator-analytics", name: "Analytics", icon: BarChart3 },
     { to: "/coordinator/settings", name: "Settings", icon: Settings },

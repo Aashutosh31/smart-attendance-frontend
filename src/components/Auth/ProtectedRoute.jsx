@@ -4,8 +4,12 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/AuthStore.jsx';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, role, isVerified } = useAuthStore();
+  // --- FIX: Get the entire userProfile object from the store ---
+  const { isAuthenticated, userProfile, isVerified } = useAuthStore();
   const location = useLocation();
+
+  // --- FIX: Get the role safely from the userProfile object ---
+  const role = userProfile?.role;
 
   // 1. If user is not authenticated, redirect to login page.
   if (!isAuthenticated) {
@@ -19,15 +23,27 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/unauthorized" replace />;
   }
   
-  // 3. Handle mandatory face verification for HODs and Faculty
-  const requiresVerification = role === 'faculty' || role === 'hod';
-  if (requiresVerification && !isVerified) {
-      const verificationPath = role === 'hod' ? '/hod/verify' : '/faculty/verify';
-      // If they are not already on their verification page, send them there.
+  // 3. Handle mandatory face verification (This logic remains the same)
+  // NOTE: Based on your files, this is currently disabled in FaceVerificationRoute.jsx,
+  // but the logic here is correct for when you re-enable it.
+  const requiresVerificationRoles = ['faculty', 'hod', 'admin', 'student'];
+  if (requiresVerificationRoles.includes(role) && !isVerified && role !== 'student' && !userProfile?.is_face_verified) {
+      let verificationPath = '/login';
+      if (role === 'admin') verificationPath = '/admin/verify';
+      if (role === 'hod') verificationPath = '/hod/verify';
+      if (role === 'faculty') verificationPath = '/faculty/verify';
+      
       if (location.pathname !== verificationPath) {
           return <Navigate to={verificationPath} replace />;
       }
   }
+
+  if (role === 'student' && !isVerified) {
+    if (location.pathname !== '/student/verify') {
+      return <Navigate to="/student/verify" replace />;
+    }
+  }
+
 
   // 4. If all checks pass, render the requested component.
   return children;

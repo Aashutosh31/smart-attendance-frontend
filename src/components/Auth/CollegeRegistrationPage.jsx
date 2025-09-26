@@ -1,11 +1,10 @@
 // src/components/Auth/CollegeRegistrationPage.jsx
-"use client";
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Building2, KeyRound, Mail, User, Shield } from "lucide-react";
-import apiClient from "../../api/apiClient"; // Make sure this is imported
+import { supabase } from "../../supabaseClient";
 
 const CollegeRegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -31,16 +30,24 @@ const CollegeRegistrationPage = () => {
     setLoading(true);
 
     try {
-      // The backend now handles everything, so we just send the form data.
-      await apiClient.registerCollege({
-        collegeId: formData.collegeId,
-        collegeName: formData.collegeName,
-        fullName: formData.fullName,
+      // --- FIX: Changed keys to snake_case ---
+      // This matches what the updated SQL trigger will expect.
+      const {  error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            role: 'admin',
+            full_name: formData.fullName,
+            college_id_text: formData.collegeId, // Use a different key to avoid confusion with UUID
+            college_name: formData.collegeName
+          },
+        },
       });
 
-      toast.success("Registration successful! You can now log in.");
+      if (error) throw error;
+
+      toast.success("Registration successful! Please check your email to verify your account.");
       navigate("/login");
     } catch (error) {
       toast.error(error.message);

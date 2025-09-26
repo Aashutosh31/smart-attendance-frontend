@@ -1,13 +1,9 @@
-// src/components/HOD/ManageCoordinators.jsx
+// File Path: ManageCoordinators.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-// Update this line
 import { UserPlus, KeyRound, Trash2, X, Mail, User, Search, GraduationCap, Calendar, ChevronDown } from 'lucide-react';
-
 import { toast } from 'react-toastify';
-import apiClient from '../../api/apiClient.js';
 import { supabase } from '../../supabaseClient.js';
-
-
+import { useAuthStore } from '../../store/AuthStore.jsx';
 
 const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, name }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,12 +19,9 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, name 
 
   return (
     <div className="relative">
-      {/* Icon */}
       {Icon && (
         <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500 z-10" />
       )}
-      
-      {/* Select Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -40,16 +33,12 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, name 
         <ChevronDown className={`h-4 w-4 text-gray-500 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <>
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
           ></div>
-          
-          {/* Options */}
           <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-20 overflow-hidden">
             {options.map((option) => (
               <button
@@ -78,6 +67,7 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const { collegeId, user } = useAuthStore();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,20 +78,29 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
     if (formData.password !== formData.confirmPassword) {
       return toast.error("Passwords do not match!");
     }
+     if (!collegeId || !user?.department) {
+        return toast.error("Could not identify your college or department. Please refresh and try again.");
+    }
 
     setIsLoading(true);
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-      confirm_password: formData.confirmPassword,
-      full_name: formData.fullName,
-      course: formData.course,
-      year: parseInt(formData.year, 10),
-      role: 'program_coordinator',
-    };
 
     try {
-      await apiClient.post('/api/accounts/users/create/', payload);
+        const { error } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                full_name: formData.fullName,
+                role: 'program_coordinator',
+                course: formData.course,
+                year: parseInt(formData.year, 10),
+                department: user.department, // Assign HOD's department
+                college_id: collegeId,
+              },
+            },
+        });
+
+      if (error) throw error;
       toast.success('Program Coordinator added successfully!');
       onCoordinatorAdded();
       setFormData({
@@ -109,7 +108,7 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
       });
       onClose();
     } catch (error) {
-      toast.error(error.response?.data?.error || "An unexpected error occurred.");
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -119,16 +118,12 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
         onClick={onClose}
       ></div>
-
-      {/* Modal */}
       <div className="relative w-full max-w-md mx-4 snake-border-modal">
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
               Add Program Coordinator
@@ -140,10 +135,7 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
               <X className="h-5 w-5" />
             </button>
           </div>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
               <input
@@ -156,8 +148,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                 required
               />
             </div>
-
-            {/* Email */}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
               <input
@@ -170,8 +160,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                 required
               />
             </div>
-
-            {/* Course */}
             <div className="relative">
               <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
               <input
@@ -184,8 +172,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                 required
               />
             </div>
-
-           {/* NEW CODE - Custom dropdown */}
               <CustomSelect
                 name="year"
                 value={formData.year}
@@ -199,9 +185,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                   { value: "4", label: "4th Year" }
                 ]}
               />
-
-
-            {/* Password */}
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
               <input
@@ -214,8 +197,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                 required
               />
             </div>
-
-            {/* Confirm Password */}
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
               <input
@@ -228,8 +209,6 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
                 required
               />
             </div>
-
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -245,6 +224,7 @@ const AddCoordinatorModal = ({ isOpen, onClose, onCoordinatorAdded }) => {
 };
 
 const ManageCoordinators = () => {
+    // ... (The rest of the ManageCoordinators component remains the same)
   const [coordinators, setCoordinators] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -423,7 +403,6 @@ const ManageCoordinators = () => {
         )}
       </div>
 
-      {/* Add Coordinator Modal */}
       <AddCoordinatorModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

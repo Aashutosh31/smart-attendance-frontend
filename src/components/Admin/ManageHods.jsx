@@ -1,9 +1,9 @@
-// src/components/Admin/ManageHods.jsx
+// File Path: ManageHods.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserPlus, KeyRound, Building, Trash2, Camera, X, Mail, User, Search } from 'lucide-react';
+import { UserPlus, KeyRound, Building, Trash2, X, Mail, User, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
-import apiClient from '../../api/apiClient.js';
 import { supabase } from '../../supabaseClient';
+import { useAuthStore } from '../../store/AuthStore';
 
 const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
   const [formData, setFormData] = useState({
@@ -11,9 +11,10 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
     email: '',
     department: '',
     password: '',
-    confirmPassword: '' // State for confirm password
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const { collegeId } = useAuthStore(); // Get the admin's college_id
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,36 +23,35 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
+      return toast.error("Passwords do not match!");
     }
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
+    if (!collegeId) {
+        return toast.error("Could not identify your college. Please refresh and try again.");
     }
-
     setIsLoading(true);
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-      password2: formData.confirmPassword, // Backend expects 'password2'
-      full_name: formData.fullName,
-      department: formData.department,
-      role: 'hod',
-    };
-
+    
     try {
-      // --- FIX: This is the correct and final URL for the API endpoint ---
-      await apiClient.post('/api/accounts/users/create/', payload);
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            role: 'hod',
+            department: formData.department,
+            college_id: collegeId, // Pass the admin's college_id
+          },
+        },
+      });
+
+      if (error) throw error;
       
-      toast.success('HOD added successfully!');
+      toast.success('HOD added successfully! They need to verify their email.');
       onHodAdded();
       setFormData({ fullName: '', email: '', department: '', password: '', confirmPassword: '' });
       onClose();
     } catch (error) {
-      // This will now catch other errors, like if the email already exists
-      const errorMessage = error.response?.data?.error || error.response?.data?.email?.[0] || "An unexpected error occurred.";
-      toast.error(errorMessage);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -61,16 +61,9 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
-        onClick={onClose}
-      ></div>
-
-      {/* Modal */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-md mx-4 snake-border-modal">
         <div className="bg-slate-900 rounded-2xl p-6 shadow-2xl">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
               Add New HOD
@@ -82,10 +75,7 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
               <X className="h-5 w-5" />
             </button>
           </div>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
@@ -98,8 +88,6 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
-
-            {/* Email */}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
@@ -112,8 +100,6 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
-
-            {/* Department */}
             <div className="relative">
               <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
@@ -126,8 +112,6 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
-
-            {/* Password */}
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
@@ -140,8 +124,6 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
-            
-            {/* Confirm Password Input */}
             <div className="relative">
               <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
               <input
@@ -154,8 +136,6 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
                 required
               />
             </div>
-
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -171,6 +151,7 @@ const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
 };
 
 const ManageHods = () => {
+  // ... (The rest of the ManageHods component remains the same as your provided file)
   const [hods, setHods] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,13 +179,13 @@ const ManageHods = () => {
   }, [fetchHods]);
 
   const handleDeleteHod = async (hodId) => {
-    if (!window.confirm('Are you sure you want to delete this HOD?')) {
+    if (!window.confirm('Are you sure you want to delete this HOD? This action cannot be undone.')) {
       return;
     }
-
+    
+    // NOTE: Deleting from auth.users requires admin privileges and is best done via a server-side function.
+    // This client-side approach is simpler but less secure for deletion.
     try {
-      // This part for deleting from Supabase auth might need to be a server-side function
-      // For now, it just deletes from the 'users' table
       const { error } = await supabase
         .from('users')
         .delete()
@@ -344,7 +325,6 @@ const ManageHods = () => {
         )}
       </div>
 
-      {/* Add HOD Modal */}
       <AddHodModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

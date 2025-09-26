@@ -12,6 +12,7 @@ import {
   Loader,
   Sun,
   Moon,
+  BookAIcon,
 } from "lucide-react";
 
 const HodDashboard = () => {
@@ -40,6 +41,9 @@ const HodDashboard = () => {
   const navItems = [
       { to: "/hod/faculty-attendance", name: "Faculty Attendance", icon: Users },
     { to: "/hod/manage-coordinators", name: "Manage Coordinators", icon: UserSquare },
+    {to:"/hod/manage-courses", name:"Manage Courses",
+      icon:BookAIcon
+    },
     { to: "/hod/manage-faculty", name: "Manage Faculty", icon: Users },
     { to: "/hod/student-reports", name: "View Students", icon: Users },
     { to: "/hod/faculty-reports", name: "Analytics", icon: BarChart3 },

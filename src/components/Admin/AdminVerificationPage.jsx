@@ -1,13 +1,13 @@
-// File Path: src/components/HOD/HodVerificationPage.jsx
+// File Path: src/components/Admin/AdminVerificationPage.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/AuthStore.jsx';
+import { useAuthStore } from '../../store/AuthStore';
 import { supabase } from '../../supabaseClient';
 import { toast } from 'react-toastify';
 import { Camera, ShieldCheck, Loader } from 'lucide-react';
 
-const HodVerificationPage = () => {
+const AdminVerificationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const { user, fetchUserProfile } = useAuthStore();
@@ -42,6 +42,8 @@ const HodVerificationPage = () => {
 
     try {
       // --- SIMULATED API CALL ---
+      // In the future, you'll replace this with a fetch call to your backend facial recognition API.
+      // For now, we simulate a successful verification after 1.5 seconds.
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Update the user's profile in Supabase to permanently mark them as verified.
@@ -52,11 +54,11 @@ const HodVerificationPage = () => {
 
       if (error) throw error;
       
-      // Refresh the user's profile in the state.
-      await fetchUserProfile();
+      // Refresh the user's profile in the state to get the new `is_face_verified` value.
+      await fetchUserProfile(); 
 
-      toast.success('HOD Identity Verified!');
-      navigate('/hod');
+      toast.success('Admin Identity Verified!');
+      navigate('/admin');
 
     } catch (error) {
       toast.error(error.message || 'Verification failed. Please try again.');
@@ -65,18 +67,16 @@ const HodVerificationPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-slate-900 p-4">
+      <div className="w-full max-w-lg p-8 space-y-6 bg-white dark:bg-slate-800 rounded-lg shadow-md text-center">
         <ShieldCheck className="w-16 h-16 mx-auto text-purple-600" />
-        <h1 className="text-2xl font-bold text-gray-900">HOD Identity Verification</h1>
-        <p className="text-gray-600">
-          As a one-time security step, please verify your identity to access the HOD Portal.
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Identity Verification</h1>
+        <p className="text-gray-600 dark:text-slate-300">
+          As a one-time security step, please verify your identity to access the Admin Portal.
         </p>
-        
         <div className="w-full bg-black rounded-lg overflow-hidden h-64 flex items-center justify-center">
           <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
         </div>
-
         <button
           onClick={handleVerification}
           disabled={isLoading || !isCameraReady}
@@ -90,4 +90,5 @@ const HodVerificationPage = () => {
   );
 };
 
-export default HodVerificationPage;
+export default AdminVerificationPage;
+
