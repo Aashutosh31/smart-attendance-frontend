@@ -50,16 +50,7 @@ const HodDashboard = () => {
     { to: "/hod/settings", name: "Settings", icon: Settings },
   ];
 
-  if (isAuthenticated && !collegeId) {
-    return (
-      <div className="min-h-screen app-bg flex justify-center items-center">
-        <div className="flex items-center space-x-2">
-          <Loader className="h-5 w-5 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen app-bg dark:bg-gradient-to-br dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950">
