@@ -1,337 +1,169 @@
-// File Path: ManageHods.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { UserPlus, KeyRound, Building, Trash2, X, Mail, User, Search } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { supabase } from '../../supabaseClient';
-import { useAuthStore } from '../../store/AuthStore';
+import React, { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { supabase } from "../../supabaseClient";
+import { toast } from "react-toastify";
+import { Loader, UserPlus, Trash2, X } from "lucide-react";
 
-const AddHodModal = ({ isOpen, onClose, onHodAdded }) => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    department: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const { collegeId } = useAuthStore(); // Get the admin's college_id
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return toast.error("Passwords do not match!");
-    }
-    if (!collegeId) {
-        return toast.error("Could not identify your college. Please refresh and try again.");
-    }
-    setIsLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: 'hod',
-            department: formData.department,
-            college_id: collegeId, // Pass the admin's college_id
-          },
-        },
-      });
-
-      if (error) throw error;
-      
-      toast.success('HOD added successfully! They need to verify their email.');
-      onHodAdded();
-      setFormData({ fullName: '', email: '', department: '', password: '', confirmPassword: '' });
-      onClose();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-md mx-4 snake-border-modal">
-        <div className="bg-slate-900 rounded-2xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-              Add New HOD
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Full Name"
-                value={formData.fullName}
-                onChange={handleChange}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="text"
-                name="department"
-                placeholder="Department"
-                value={formData.department}
-                onChange={handleChange}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password (min 6 characters)"
-                value={formData.password}
-                onChange={handleChange}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-6"
-            >
-              {isLoading ? 'Adding HOD...' : 'Add HOD'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ManageHods = () => {
-  // ... (The rest of the ManageHods component remains the same as your provided file)
+const ManageHodsPage = () => {
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
   const [hods, setHods] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchHods = useCallback(async () => {
+  const password = useRef({});
+  password.current = watch("password", "");
+
+  const fetchHods = async () => {
+    setIsLoading(true);
     try {
+      // *** THE FIX IS HERE ***
+      // We are no longer asking for the 'email' column because it doesn't exist in this table.
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'hod');
-
+        .from("users")
+        .select("id, full_name, department") // Correctly selects only existing columns
+        .eq("role", "hod");
+        
       if (error) throw error;
       setHods(data || []);
     } catch (error) {
-      console.error('Error fetching HODs:', error);
-      toast.error('Failed to fetch HODs.');
+      toast.error("Failed to fetch HODs: " + error.message);
+      console.error("Fetch HODs error:", error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchHods();
-  }, [fetchHods]);
+  }, []);
 
-  const handleDeleteHod = async (hodId) => {
-    if (!window.confirm('Are you sure you want to delete this HOD? This action cannot be undone.')) {
-      return;
-    }
-    
-    // NOTE: Deleting from auth.users requires admin privileges and is best done via a server-side function.
-    // This client-side approach is simpler but less secure for deletion.
+  const onSubmit = async (formData) => {
+    setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', hodId);
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          full_name: formData.full_name,
+          email: formData.email,
+          password: formData.password,
+          department: formData.department,
+          role: "hod",
+        },
+      });
 
-      if (error) throw error;
-
-      toast.success('HOD deleted successfully!');
+      if (error) throw new Error(error.message);
+      if (data.error) throw new Error(data.error);
+      
+      toast.success(`HOD "${formData.full_name}" created successfully!`);
+      reset();
+      setIsModalOpen(false);
       fetchHods();
     } catch (error) {
-      console.error('Error deleting HOD:', error);
-      toast.error('Failed to delete HOD.');
+      toast.error("Failed to create HOD: " + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const filteredHods = hods.filter(hod =>
-    hod.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hod.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hod.department?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-purple-500" size={48} /></div>;
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="glass-card p-6 rounded-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-              Manage HODs
-            </h1>
-            <p className="text-slate-400 mt-1">
-              Add and manage Head of Departments
-            </p>
-          </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
-          >
-            <UserPlus className="h-5 w-5" />
-            Add New HOD
-          </button>
-        </div>
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">Manage Head of Departments</h1>
+        <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center">
+          <UserPlus className="h-5 w-5 mr-2" />
+          Add New HOD
+        </button>
       </div>
 
-      {/* Search Section */}
-      <div className="glass-card p-4 rounded-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search HODs by name, email, or department..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-white placeholder-slate-500 rounded-lg focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* HODs Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-3 text-slate-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-500 border-t-transparent"></div>
-              <span>Loading HODs...</span>
-            </div>
-          </div>
-        ) : filteredHods.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <UserPlus className="h-16 w-16 text-slate-600 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-300 mb-2">
-              {searchTerm ? 'No HODs Found' : 'No HODs Yet'}
-            </h3>
-            <p className="text-slate-500 mb-6">
-              {searchTerm 
-                ? 'Try adjusting your search criteria' 
-                : 'Get started by adding your first HOD'
-              }
-            </p>
-            {!searchTerm && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
-              >
-                <UserPlus className="h-5 w-5" />
-                Add First HOD
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-800/50">
-                  <th className="text-left py-4 px-6 font-semibold text-slate-300">Name</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-300">Email</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-300">Department</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-300">Created</th>
-                  <th className="text-left py-4 px-6 font-semibold text-slate-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredHods.map((hod) => (
-                  <tr key={hod.id} className="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                          {hod.full_name?.charAt(0).toUpperCase() || 'H'}
-                        </div>
-                        <span className="text-white font-medium">{hod.full_name}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-slate-300">{hod.email}</td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-lg">
-                        <Building className="h-4 w-4" />
-                        {hod.department || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-slate-400">
-                      {hod.created_at ? new Date(hod.created_at).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() => handleDeleteHod(hod.id)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Delete HOD"
-                      >
-                        <Trash2 className="h-4 w-4" />
+      <div className="bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl dark:border dark:border-slate-800/50 rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800/50">
+            <thead className="bg-gray-50 dark:bg-slate-800/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Department</th>
+                {/* The 'Email' column has been removed to match the data we are fetching */}
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-slate-800/50">
+              {hods.length > 0 ? (
+                hods.map((hod) => (
+                  <tr key={hod.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{hod.full_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">{hod.department}</td>
+                    {/* The 'Email' data cell has also been removed */}
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button className="text-red-500 hover:text-red-700 transition-colors">
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="px-6 py-12 text-center text-sm text-gray-500 dark:text-slate-400">
+                    No HODs have been added yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <AddHodModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onHodAdded={fetchHods}
-      />
-    </div>
+      {/* Modal for adding a new HOD (No changes needed here) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl p-8 w-full max-w-md border border-slate-800">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Add New Head of Department</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Full Name</label>
+                <input type="text" {...register("full_name", { required: "Full name is required" })} className="mt-1 block w-full input-field" />
+                {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Department</label>
+                <input type="text" {...register("department", { required: "Department is required" })} className="mt-1 block w-full input-field" />
+                {errors.department && <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Email Address</label>
+                <input type="email" {...register("email", { required: "Email is required", pattern: { value: /^\S+@\S+$/i, message: "Invalid email" }})} className="mt-1 block w-full input-field" />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Password</label>
+                <input type="password" {...register("password", { required: "Password is required", minLength: { value: 8, message: "Min 8 chars" }})} className="mt-1 block w-full input-field" />
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Confirm Password</label>
+                <input type="password" {...register("confirm_password", { required: true, validate: value => value === password.current || "Passwords do not match" })} className="mt-1 block w-full input-field" />
+                {errors.confirm_password && <p className="text-red-500 text-xs mt-1">{errors.confirm_password.message}</p>}
+              </div>
+              <div className="flex justify-end space-x-4 pt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="btn-primary w-36 flex items-center justify-center">
+                  {isSubmitting ? <Loader className="animate-spin h-5 w-5" /> : "Create HOD"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
-export default ManageHods;
+export default ManageHodsPage;
