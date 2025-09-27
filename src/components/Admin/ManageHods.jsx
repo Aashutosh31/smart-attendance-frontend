@@ -50,24 +50,41 @@ const fetchHods = async () => {
   setIsLoading(true);
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    
     setDebugInfo({
-      email: user.email,
-      role: user.app_metadata?.role || user.user_metadata?.role
+      userId: user?.id,
+      email: user?.email, 
+      role: user?.app_metadata?.role || user?.user_metadata?.role
     });
 
+    // Get current admin's college_id first
+    const { data: adminData, error: adminError } = await supabase
+      .from("users")
+      .select("college_id")
+      .eq("id", user.id)
+      .single();
+
+    if (adminError || !adminData?.college_id) {
+      throw new Error("Unable to fetch admin college information");
+    }
+
+    // Now fetch HODs only from the same college
     const { data, error } = await supabase
       .from("users")
-      .select("id, full_name, department")
-      .eq("role", "hod");
+      .select("id, full_name, department") 
+      .eq("role", "hod")
+      .eq("college_id", adminData.college_id); // Filter by same college
 
     if (error) throw error;
-    setHods(data);
+    
+    setHods(data || []);
   } catch (error) {
     toast.error("Failed to fetch HODs: " + error.message);
   } finally {
     setIsLoading(false);
   }
 };
+
 
 
 
