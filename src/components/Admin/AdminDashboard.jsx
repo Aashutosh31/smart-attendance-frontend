@@ -1,3 +1,4 @@
+// File Path: src/components/Admin/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/AuthStore";
@@ -8,14 +9,14 @@ import {
   BarChart3,
   Settings,
   UserSquare,
-  Loader,
   Sun,
   Moon,
 } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { logout: logoutAction, isAuthenticated, collegeId } = useAuthStore();
+  // --- FIX: Remove the problematic 'collegeId' check ---
+  const { logout: logoutAction } = useAuthStore();
 
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem("theme") === "dark"
@@ -45,21 +46,14 @@ const AdminDashboard = () => {
     { to: "/admin/settings", name: "Settings", icon: Settings },
   ];
 
-  if (isAuthenticated && !collegeId) {
-    return (
-      <div className="min-h-screen app-bg flex justify-center items-center">
-        <div className="flex items-center space-x-2">
-          <Loader className="h-5 w-5 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  // --- REMOVED THE INFINITE LOADER BLOCK ---
+  // By the time we render this component, the RoleBasedRedirect has already
+  // ensured that we have a user profile, so this check is no longer needed.
 
   return (
     <div className="min-h-screen app-bg dark:bg-gradient-to-br dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950">
       <div className="flex">
-        {/* Sidebar - FIXED: proper positioning for Sign Out button */}
+        {/* Sidebar */}
         <div className="w-64 min-h-screen bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl border-r border-gray-200 dark:border-slate-800/50 dark:shadow-2xl relative">
           {/* Logo section */}
           <div className="flex items-center px-6 py-4 border-b border-gray-200 dark:border-slate-800/50">
@@ -94,7 +88,7 @@ const AdminDashboard = () => {
             })}
           </nav>
 
-          {/* FIXED: Sign Out button positioned properly within sidebar */}
+          {/* Sign Out button */}
           <div className="absolute bottom-4 left-3 right-3">
             <button
               onClick={handleLogout}

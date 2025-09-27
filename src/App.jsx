@@ -1,12 +1,10 @@
 // File Path: src/App.jsx
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // --- CORE & AUTH COMPONENTS ---
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
-import FaceVerificationRoute from "./components/Auth/FaceVerificationRoute.jsx";
 import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
 import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
@@ -37,7 +35,7 @@ import ManageHodsPage from "./components/Admin/ManageHods.jsx";
 import ViewStudentsPage from "./components/Admin/ViewStudents.jsx";
 import FacultyAttendancePage from "./components/HOD/FacultyAttendancePage.jsx";
 import ManageCoordinatorsPage from "./components/HOD/ManageCoordinators.jsx";
-import ManageCoursesPage from "./components/HOD/ManageCoursesPage.jsx"; 
+import ManageCoursesPage from "./components/HOD/ManageCoursesPage.jsx";
 import FacultyReportsPage from "./components/HOD/FacultyReportsPage.jsx";
 import StudentReportsPage from "./components/HOD/StudentsReportPage.jsx";
 import AddStudentPage from "./components/Coordinator/AddStudentPage.jsx";
@@ -71,7 +69,7 @@ function App() {
           {/* --- PROTECTED ROUTES WITH VERIFICATION LOGIC --- */}
           
           {/* 1. Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><FaceVerificationRoute><AdminDashboard /></FaceVerificationRoute></ProtectedRoute>}>
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}>
             <Route index element={<AdminAnalyticsPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
@@ -83,7 +81,7 @@ function App() {
           <Route path="/admin/verify" element={<ProtectedRoute allowedRoles={['admin']}><AdminVerificationPage /></ProtectedRoute>} />
 
           {/* 2. HOD Routes */}
-          <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><FaceVerificationRoute><HodDashboard /></FaceVerificationRoute></ProtectedRoute>}>
+          <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
             <Route index element={<FacultyAttendancePage />} />
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
             <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
@@ -96,7 +94,7 @@ function App() {
           <Route path="/hod/verify" element={<ProtectedRoute allowedRoles={['hod']}><HodVerificationPage /></ProtectedRoute>} />
           
           {/* 3. Faculty Routes */}
-          <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FaceVerificationRoute><FacultyDashboard /></FaceVerificationRoute></ProtectedRoute>}>
+          <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>}>
             <Route index element={<DashboardOverview />} />
             <Route path="overview" element={<DashboardOverview />} />
             <Route path="courses" element={<CoursesPage />} />
@@ -106,7 +104,7 @@ function App() {
           <Route path="/faculty/verify" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyVerificationPage /></ProtectedRoute>} />
           
           {/* 4. Student Routes */}
-          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><FaceVerificationRoute><StudentDashboard /></FaceVerificationRoute></ProtectedRoute>} />
+          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
           <Route path="/student/verify" element={<ProtectedRoute allowedRoles={['student']}><StudentVerificationPage /></ProtectedRoute>} />
           
           {/* 5. Program Coordinator Routes (No verification needed for this role) */}

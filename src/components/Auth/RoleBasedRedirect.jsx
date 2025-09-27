@@ -4,11 +4,11 @@ import { useAuthStore } from '../../store/AuthStore.jsx';
 import { Loader } from 'lucide-react';
 
 const RoleBasedRedirect = () => {
-  const { userProfile, isAuthenticated } = useAuthStore();
+  // --- FIX: Get the new loading and error states ---
+  const { userProfile, isAuthenticated, isLoadingProfile, profileError } = useAuthStore();
 
-  // If the user is logged in but we are still waiting for their profile details,
-  // show the loading spinner. This is the state that was causing the freeze.
-  if (isAuthenticated && !userProfile) {
+  // If we are actively trying to fetch the profile, show the loader.
+  if (isLoadingProfile) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
         <Loader className="h-12 w-12 animate-spin text-blue-600" />
@@ -17,25 +17,41 @@ const RoleBasedRedirect = () => {
     );
   }
   
-  // Once the userProfile is loaded, get the role from it.
-  const role = userProfile?.role;
-
-  // Navigate based on the fetched role.
-  switch (role) {
-    case 'admin':
-      return <Navigate to="/admin" replace />;
-    case 'hod':
-      return <Navigate to="/hod" replace />;
-    case 'faculty':
-      return <Navigate to="/faculty" replace />;
-    case 'program_coordinator':
-      return <Navigate to="/coordinator" replace />;
-    case 'student':
-        return <Navigate to="/student" replace />;
-    default:
-      // If there's no role or the user is not authenticated, send to login.
-      return <Navigate to="/login" replace />;
+  // --- NEW: If the profile fetch failed, show an error message ---
+  if (profileError) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600">Failed to Load Profile</h1>
+            <p className="text-gray-600 mt-2">Could not retrieve your user data. Please try logging in again.</p>
+            <p className="text-xs text-gray-500 mt-4">Error: {profileError}</p>
+        </div>
+      </div>
+    );
   }
+
+  // If the user is authenticated and we have their profile, redirect them.
+  if (isAuthenticated && userProfile) {
+      const role = userProfile.role;
+      switch (role) {
+        case 'admin':
+          return <Navigate to="/admin" replace />;
+        case 'hod':
+          return <Navigate to="/hod" replace />;
+        case 'faculty':
+          return <Navigate to="/faculty" replace />;
+        case 'program_coordinator':
+          return <Navigate to="/coordinator" replace />;
+        case 'student':
+            return <Navigate to="/student" replace />;
+        default:
+          // If role is unknown, send to login.
+          return <Navigate to="/login" replace />;
+      }
+  }
+
+  // Default fallback: if not authenticated, go to login.
+  return <Navigate to="/login" replace />;
 };
 
 export default RoleBasedRedirect;
