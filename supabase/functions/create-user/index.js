@@ -1,73 +1,68 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.0.0";
+import { serve } from "https://deno.land/std/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// THE FIX: Define corsHeaders directly in this file to remove the broken import.
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  // Handle preflight OPTIONS request
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // 1. Create a client with the permissions of the user who called the function
-    const userSupabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization") } } }
-    );
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Missing Authorization");
 
-    // 2. Check if the calling user is an admin
-    const { data: adminProfile, error: adminError } = await userSupabaseClient
+    const token = authHeader.split(" ")[1];
+
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) throw new Error("Unauthorized");
+
+    const { data: adminProfile, error: profileError } = await userClient
       .from("users")
-      .select("role, college_id")
+      .select("college_id")
+      .eq("id", user.id)
       .single();
 
-    if (adminError || adminProfile.role !== 'admin') {
-      throw new Error("Unauthorized: Only admins can create users.");
-    }
-    
-    // 3. Get the new user's details from the request
+    if (profileError || !adminProfile) throw new Error("Admin profile fetch failed");
+
+    // Read request JSON for new HOD's details
     const { email, password, full_name, role, department } = await req.json();
+
     if (!email || !password || !full_name || !role || !department) {
-       throw new Error("Missing required fields: email, password, full_name, role, department.");
+      return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
 
-    // 4. Create a privileged Supabase client to create the new user
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 5. Create the user. The handle_new_user trigger will automatically create their profile.
-    const { data, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: password,
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
       email_confirm: true,
       user_metadata: {
-        full_name: full_name,
-        role: role,
+        full_name,
+        role,
+        department,
         college_id: adminProfile.college_id,
-        department: department,
       },
     });
 
     if (createError) {
-      throw createError;
+      return new Response(JSON.stringify({ error: createError.message }), { status: 500 });
     }
 
-    return new Response(JSON.stringify({ user: data.user }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 201, // 201 means "Created"
+    return new Response(JSON.stringify({ message: "HOD created successfully", user: newUser }), {
+      status: 201,
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500, // Use 500 for internal server errors
-    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 401 });
   }
 });
