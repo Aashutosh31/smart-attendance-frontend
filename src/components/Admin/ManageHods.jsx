@@ -92,57 +92,72 @@ const fetchHods = async () => {
     fetchHods();
   }, []);
 
-  const onSubmit = async (formData) => {
-    setIsSubmitting(true);
-    try {
-      // Frontend validation for confirm password
-      if (formData.password !== formData.confirm_password) {
-        throw new Error("Passwords do not match");
-      }
+const onSubmit = async (formData) => {
+  setIsSubmitting(true);
+  try {
+    // Get current user
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) {
+      throw new Error("No active session found. Please login.");
+    }
 
-      // Get current authenticated user
-      const { data: { user }, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !user) {
-        throw new Error("No active session found. Please login.");
-      }
+    // Get admin's college_id - BETTER ERROR HANDLING
+    const { data: adminProfile, error: profErr } = await supabase
+      .from("users")
+      .select("college_id")
+      .eq("id", user.id)
+      .single();
 
-      // Fetch admin's college_id from profiles table
-      const { data: adminProfile, error: profErr } = await supabase
+    // DEBUG: Log what we found
+    console.log("Admin profile:", adminProfile);
+    console.log("Profile error:", profErr);
+
+    // If no college_id found, get it from any admin user as fallback
+    let college_id = adminProfile?.college_id;
+    
+    if (!college_id) {
+      const { data: anyAdmin } = await supabase
         .from("users")
         .select("college_id")
-        .eq("id", user.id)
+        .eq("role", "admin")
+        .not("college_id", "is", null)
+        .limit(1)
         .single();
-
-      if (profErr || !adminProfile?.college_id) {
-        throw new Error("Unable to resolve college for the current admin.");
-      }
-
-      // Create HOD with service role (admin) client
-      const { error: createErr } = await supabaseAdmin.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: formData.full_name,
-          role: "hod",
-          department: formData.department, // program selection
-          college_id: adminProfile.college_id,
-        },
-      });
-
-      if (createErr) throw createErr;
-
-      toast.success(`HOD "${formData.full_name}" created successfully!`);
-      reset();
-      setIsModalOpen(false);
-      fetchHods();
-    } catch (err) {
-      console.error("Error creating HOD:", err);
-      toast.error(`Error creating HOD: ${err.message}`);
-    } finally {
-      setIsSubmitting(false);
+      
+      college_id = anyAdmin?.college_id;
     }
-  };
+
+    if (!college_id) {
+      throw new Error("No college found. Please contact support or try registering your college again.");
+    }
+
+    // Create HOD with the found college_id
+    const { error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      email: formData.email,
+      password: formData.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: formData.full_name,
+        role: "hod",
+        department: formData.department,
+        college_id: college_id, // Use the found college_id
+      },
+    });
+
+    if (createErr) throw createErr;
+
+    toast.success(`HOD "${formData.full_name}" created successfully!`);
+    reset();
+    setIsModalOpen(false);
+    fetchHods();
+  } catch (err) {
+    console.error("Error creating HOD:", err);
+    toast.error(`Error creating HOD: ${err.message}`);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const deleteHod = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete HOD "${name}"?`)) return;
