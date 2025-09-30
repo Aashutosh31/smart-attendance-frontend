@@ -25,12 +25,28 @@ import { useAuthStore } from '../../store/AuthStore'; // Adjust path as needed
 import { supabase } from '../../supabaseClient'; // Adjust path as needed
 
 const SettingsPage = () => {
-  const { user, logout } = useAuthStore(); // Get current user from auth store
+  // Add this to EVERY page component (AdminReportsPage, ManageHods, etc.)
+
+const [darkMode, setDarkMode] = useState(() => 
+  document.documentElement.classList.contains('dark')
+);
+
+// 🔥 Universal Dark Mode Listener - Add this useEffect to every page
+useEffect(() => {
+  const handleDarkModeChange = (event) => {
+    setDarkMode(event.detail.darkMode);
+  };
+
+  window.addEventListener('darkModeChange', handleDarkModeChange);
   
-  // Theme state
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
+  return () => {
+    window.removeEventListener('darkModeChange', handleDarkModeChange);
+  };
+}, []);
+
+
+  const { user } = useAuthStore(); // Get current user from auth store
+  
 
   // Loading state
   const [loading, setLoading] = useState(true);
@@ -786,17 +802,6 @@ const SettingsPage = () => {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Danger Zone */}
-          <div className="glass-card p-6 rounded-2xl border-red-200 dark:border-red-500/20">
-            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">Danger Zone</h3>
-            <button
-              onClick={logout}
-              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Sign Out
-            </button>
           </div>
         </div>
       </div>

@@ -6,6 +6,26 @@ import { supabase } from '../../supabaseClient.js';
 import { useAuthStore } from '../../store/AuthStore';
 
 const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
+    // Add this to EVERY page component (AdminReportsPage, ManageHods, etc.)
+
+const [setDarkMode] = useState(() => 
+  document.documentElement.classList.contains('dark')
+);
+
+// 🔥 Universal Dark Mode Listener - Add this useEffect to every page
+useEffect(() => {
+  const handleDarkModeChange = (event) => {
+    setDarkMode(event.detail.darkMode);
+  };
+
+  window.addEventListener('darkModeChange', handleDarkModeChange);
+  
+  return () => {
+    window.removeEventListener('darkModeChange', handleDarkModeChange);
+  };
+}, []);
+
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',

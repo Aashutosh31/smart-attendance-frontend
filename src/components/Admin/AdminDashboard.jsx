@@ -1,112 +1,311 @@
 // File Path: src/components/Admin/AdminDashboard.jsx
-import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import {
-  LayoutDashboard,
-  BarChart3,
-  FileText,
-  Users,
-  UserCheck,
-  Building,
-  LogOut,
-  Settings,
-  Sun,
-  Moon,
-  Bell,
+import React, { useState, useEffect } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  BarChart3, 
+  FileText, 
+  Users, 
+  UserCheck, 
+  Building, 
+  LogOut, 
+  Settings, 
+  Sun, 
+  Moon, 
+  Bell, 
   UserCircle,
+  Menu,
+  X,
+  ChevronRight,
+  Shield,
+  Sparkles
 } from 'lucide-react';
-import { useAuthStore } from '../../store/AuthStore'; // 2. Import the Auth Store
+import { useAuthStore } from '../../store/AuthStore';
 
-// This is your original component structure, preserved.
 const AdminDashboard = () => {
-  // 3. Add the logic needed for sign-out
   const { signOut, profile } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState(3);
+
+  // Apply dark mode immediately on mount and changes
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Force re-render of child components by dispatching a custom event
+    window.dispatchEvent(new CustomEvent('darkModeChange', { detail: { darkMode } }));
+  }, [darkMode]);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login'); // Redirect after sign-out is complete
+    navigate('/login');
+  };
+
+  const handleDarkModeToggle = () => {
+    setDarkMode(!darkMode);
   };
 
   const navLinks = [
-    { icon: BarChart3, text: 'Analytics', path: '/admin/analytics' },
-    { icon: FileText, text: 'Reports', path: '/admin/reports' },
-    { icon: Building, text: 'Manage HODs', path: '/admin/manage-hods' },
-    { icon: UserCheck, text: 'Manage Faculty', path: '/admin/manage-faculty' },
-    { icon: Users, text: 'View Students', path: '/admin/view-students' },
+    { icon: BarChart3, text: 'Analytics', path: '/admin/analytics', color: 'from-blue-500 to-cyan-500' },
+    { icon: FileText, text: 'Reports', path: '/admin/reports', color: 'from-emerald-500 to-teal-500' },
+    { icon: Building, text: 'Manage HODs', path: '/admin/manage-hods', color: 'from-purple-500 to-indigo-500' },
+    { icon: UserCheck, text: 'Manage Faculty', path: '/admin/manage-faculty', color: 'from-orange-500 to-red-500' },
+    { icon: Users, text: 'View Students', path: '/admin/view-students', color: 'from-pink-500 to-rose-500' },
+    { icon: Settings, text: 'Settings', path: '/admin/settings', color: 'from-slate-500 to-slate-600' },
   ];
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <div className="flex h-screen bg-slate-900 text-gray-300 font-sans">
-      {/* Sidebar - Your original design */}
-      <aside className="w-64 flex-shrink-0 bg-slate-800/50 backdrop-blur-lg border-r border-purple-500/20">
-        <div className="flex flex-col h-full">
-          <div className="h-20 flex items-center justify-center border-b border-purple-500/20">
-            <LayoutDashboard className="text-purple-400 h-8 w-8" />
-            <h1 className="ml-3 text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-              Admin Portal
-            </h1>
+    <div className={`min-h-screen transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
+        : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'
+    }`}>
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`fixed left-0 top-0 z-50 h-full transition-all duration-300 ${
+        sidebarExpanded ? 'w-72' : 'w-20'
+      } ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        <div className={`h-full backdrop-blur-xl border-r transition-colors duration-300 ${
+          darkMode 
+            ? 'bg-slate-900/80 border-slate-700/50' 
+            : 'bg-white/80 border-slate-200/50'
+        }`}>
+          {/* Logo Section - FIXED */}
+          <div className="p-6 border-b border-slate-200/10">
+            {sidebarExpanded ? (
+              // Expanded state - Show logo and toggle button
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse" />
+                  </div>
+                  <div>
+                    <h2 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                      Admin Portal
+                    </h2>
+                    <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Smart Attendance
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setSidebarExpanded(false)}
+                  className={`p-2 rounded-xl transition-all duration-300 hover:scale-110 ${
+                    darkMode 
+                      ? 'hover:bg-slate-700/50 text-slate-400 hover:text-white' 
+                      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              // Collapsed state - Show only centered toggle button
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setSidebarExpanded(true)}
+                  className={`p-2 rounded-xl transition-all duration-300 hover:scale-110 ${
+                    darkMode 
+                      ? 'hover:bg-slate-700/50 text-slate-400 hover:text-white' 
+                      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
+            )}
           </div>
-          <nav className="flex-grow px-4 py-6 space-y-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-purple-500/20 hover:text-white transition-all duration-200 group"
-              >
-                <link.icon className="h-5 w-5 mr-3 text-purple-400/70 group-hover:text-purple-300" />
-                <span>{link.text}</span>
-              </Link>
-            ))}
+
+          {/* Navigation */}
+          <nav className="p-4 space-y-2">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(link.path);
+              
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`group relative flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
+                    sidebarExpanded ? 'space-x-3' : 'justify-center'
+                  } ${
+                    active
+                      ? `bg-gradient-to-r ${link.color} shadow-lg shadow-blue-500/25 text-white`
+                      : darkMode
+                      ? 'hover:bg-slate-700/50 text-slate-300 hover:text-white'
+                      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+                  }`}
+                  title={!sidebarExpanded ? link.text : undefined}
+                >
+                  {active && sidebarExpanded && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+                  )}
+                  <Icon className={`w-5 h-5 transition-transform duration-300 ${
+                    active ? 'scale-110' : 'group-hover:scale-110'
+                  } ${!sidebarExpanded ? 'mx-auto' : ''}`} />
+                  
+                  {sidebarExpanded && (
+                    <>
+                      <span className="font-medium">{link.text}</span>
+                      {active && <ChevronRight className="w-4 h-4 ml-auto" />}
+                    </>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
-          <div className="px-4 py-6 border-t border-purple-500/20 space-y-2">
-            <Link
-              to="/admin/settings"
-              className="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-purple-500/20 hover:text-white transition-all duration-200 group"
-            >
-              <Settings className="h-5 w-5 mr-3 text-purple-400/70 group-hover:text-purple-300" />
-              <span>Settings</span>
-            </Link>
-            {/* 4. Attach the handleSignOut function to your original button */}
+
+          {/* Bottom Section */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+            {/* Profile Card */}
+            <div className={`p-4 rounded-xl backdrop-blur-sm border transition-colors duration-300 ${
+              darkMode 
+                ? 'bg-slate-800/30 border-slate-700/30' 
+                : 'bg-slate-50/50 border-slate-200/30'
+            }`}>
+              <div className={`flex items-center ${sidebarExpanded ? 'space-x-3' : 'justify-center'}`}>
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center">
+                    <UserCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800" />
+                </div>
+                {sidebarExpanded && (
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium text-sm truncate ${
+                      darkMode ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      {profile?.full_name || 'Admin User'}
+                    </p>
+                    <p className={`text-xs truncate ${
+                      darkMode ? 'text-slate-400' : 'text-slate-500'
+                    }`}>
+                      {profile?.email || 'admin@example.com'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 group"
+              className={`w-full flex items-center px-4 py-3 rounded-xl transition-all duration-300 group ${
+                sidebarExpanded ? 'space-x-3' : 'justify-center'
+              } ${
+                darkMode 
+                  ? 'hover:bg-red-500/10 text-slate-300 hover:text-red-400' 
+                  : 'hover:bg-red-50 text-slate-600 hover:text-red-600'
+              }`}
+              title={!sidebarExpanded ? 'Sign Out' : undefined}
             >
-              <LogOut className="h-5 w-5 mr-3" />
-              <span>Sign Out</span>
+              <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+              {sidebarExpanded && (
+                <span className="font-medium">Sign Out</span>
+              )}
             </button>
           </div>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content Area - Your original design */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 flex-shrink-0 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-lg border-b border-purple-500/20">
-          <div>
-            <h2 className="text-xl font-semibold">Welcome, {profile?.full_name || 'Admin'}!</h2>
-            <p className="text-sm text-gray-400">
-              Here's what's happening in your institution today.
-            </p>
-          </div>
-          <div className="flex items-center space-x-6">
-            <button className="p-2 rounded-full hover:bg-slate-700 transition-colors">
-              <Sun className="h-5 w-5 text-yellow-400" />
-            </button>
-            <button className="relative p-2 rounded-full hover:bg-slate-700 transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="w-px h-8 bg-slate-700"></div>
-            <div className="flex items-center">
-              <UserCircle className="h-9 w-9 text-purple-400" />
-              <div className="ml-3">
-                <p className="font-semibold text-sm">{profile?.full_name}</p>
-                <p className="text-xs text-gray-400">{profile?.role}</p>
+      {/* Main Content */}
+      <div className={`transition-all duration-300 ${
+        sidebarExpanded ? 'lg:ml-72' : 'lg:ml-20'
+      }`}>
+        {/* Top Bar */}
+        <header className={`sticky top-0 z-30 backdrop-blur-xl border-b transition-colors duration-300 ${
+          darkMode 
+            ? 'bg-slate-900/80 border-slate-700/50' 
+            : 'bg-white/80 border-slate-200/50'
+        }`}>
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`p-2 rounded-xl lg:hidden transition-colors duration-200 ${
+                  darkMode 
+                    ? 'hover:bg-slate-700 text-slate-400' 
+                    : 'hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className={`text-xl font-bold flex items-center space-x-2 ${
+                  darkMode ? 'text-white' : 'text-slate-900'
+                }`}>
+                  <Sparkles className="w-5 h-5 text-yellow-500" />
+                  <span>Welcome back, Admin!</span>
+                </h1>
+                <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
               </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              {/* Notifications */}
+              <button className={`relative p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
+                darkMode 
+                  ? 'hover:bg-slate-700 text-slate-400 hover:text-white' 
+                  : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+              }`}>
+                <Bell className="w-5 h-5" />
+                {notifications > 0 && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs font-bold text-white">{notifications}</span>
+                  </div>
+                )}
+              </button>
+
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={handleDarkModeToggle}
+                className={`p-3 rounded-xl transition-all duration-300 hover:scale-110 ${
+                  darkMode 
+                    ? 'hover:bg-slate-700 text-yellow-400' 
+                    : 'hover:bg-slate-100 text-slate-600'
+                }`}
+              >
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-8">
+
+        {/* Page Content */}
+        <main className="p-6">
           <Outlet />
         </main>
       </div>
