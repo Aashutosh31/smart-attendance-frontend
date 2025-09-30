@@ -1,7 +1,11 @@
 // File Path: src/App.jsx
+import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// --- STATE MANAGEMENT ---
+import { useAuthStore } from "./store/AuthStore";
 
 // --- CORE & AUTH COMPONENTS ---
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
@@ -23,7 +27,6 @@ import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
 import FacultyVerificationPage from "./components/Faculty/FacultyVerificationPage.jsx";
 import StudentVerificationPage from "./components/Student/StudentVerificationPage.jsx";
 
-
 // --- OTHER PAGES ---
 import DashboardOverview from "./components/Faculty/DashboardOverview.jsx";
 import CoursesPage from "./components/Faculty/CoursesPage.jsx";
@@ -44,6 +47,11 @@ import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
 function App() {
+  // This hook runs once when the app mounts, initializing the auth state.
+  useEffect(() => {
+    useAuthStore.getState().initializeSession();
+  }, []);
+
   return (
     <>
       <ToastContainer

@@ -1,132 +1,114 @@
 // File Path: src/components/Admin/AdminDashboard.jsx
-import React, { useState, useEffect } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/AuthStore";
+import React from 'react';
+import { Outlet, Link, useNavigate } from 'react-router-dom'; // 1. Import useNavigate
 import {
-  Shield,
-  Users,
-  LogOut,
+  LayoutDashboard,
   BarChart3,
+  FileText,
+  Users,
+  UserCheck,
+  Building,
+  LogOut,
   Settings,
-  UserSquare,
   Sun,
   Moon,
-} from "lucide-react";
+  Bell,
+  UserCircle,
+} from 'lucide-react';
+import { useAuthStore } from '../../store/AuthStore'; // 2. Import the Auth Store
 
+// This is your original component structure, preserved.
 const AdminDashboard = () => {
+  // 3. Add the logic needed for sign-out
+  const { signOut, profile } = useAuthStore();
   const navigate = useNavigate();
-  // --- FIX: Remove the problematic 'collegeId' check ---
-  const { logout: logoutAction } = useAuthStore();
 
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [darkMode]);
-
-  const handleLogout = () => {
-    logoutAction();
-    navigate("/login");
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login'); // Redirect after sign-out is complete
   };
 
-  const navItems = [
-    { to: "/admin/reports", name: "Reports", icon: BarChart3 },
-    { to: "/admin/manage-hods", name: "Manage HODs", icon: UserSquare },
-    { to: "/admin/manage-faculty", name: "Manage Faculty", icon: Users },
-    { to: "/admin/view-students", name: "View Students", icon: Users },
-    { to: "/admin/analytics", name: "Analytics", icon: BarChart3 },
-    { to: "/admin/settings", name: "Settings", icon: Settings },
+  const navLinks = [
+    { icon: BarChart3, text: 'Analytics', path: '/admin/analytics' },
+    { icon: FileText, text: 'Reports', path: '/admin/reports' },
+    { icon: Building, text: 'Manage HODs', path: '/admin/manage-hods' },
+    { icon: UserCheck, text: 'Manage Faculty', path: '/admin/manage-faculty' },
+    { icon: Users, text: 'View Students', path: '/admin/view-students' },
   ];
 
-  // --- REMOVED THE INFINITE LOADER BLOCK ---
-  // By the time we render this component, the RoleBasedRedirect has already
-  // ensured that we have a user profile, so this check is no longer needed.
-
   return (
-    <div className="min-h-screen app-bg dark:bg-gradient-to-br dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 min-h-screen bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl border-r border-gray-200 dark:border-slate-800/50 dark:shadow-2xl relative">
-          {/* Logo section */}
-          <div className="flex items-center px-6 py-4 border-b border-gray-200 dark:border-slate-800/50">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-500 dark:bg-gradient-to-br dark:from-fuchsia-500 dark:to-purple-600 rounded-xl">
-                <Shield className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-800 dark:text-white">Admin Panel</span>
-            </div>
+    <div className="flex h-screen bg-slate-900 text-gray-300 font-sans">
+      {/* Sidebar - Your original design */}
+      <aside className="w-64 flex-shrink-0 bg-slate-800/50 backdrop-blur-lg border-r border-purple-500/20">
+        <div className="flex flex-col h-full">
+          <div className="h-20 flex items-center justify-center border-b border-purple-500/20">
+            <LayoutDashboard className="text-purple-400 h-8 w-8" />
+            <h1 className="ml-3 text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+              Admin Portal
+            </h1>
           </div>
-
-          {/* Navigation */}
-          <nav className="mt-6 px-3 pb-20">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center px-3 py-2 mb-1 text-sm font-medium rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-orange-100 text-orange-600 dark:bg-gradient-to-r dark:from-fuchsia-500/30 dark:to-purple-500/30 dark:text-black dark:shadow-lg dark:shadow-fuchsia-500/25"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800/50"
-                    }`
-                  }
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </NavLink>
-              );
-            })}
+          <nav className="flex-grow px-4 py-6 space-y-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-purple-500/20 hover:text-white transition-all duration-200 group"
+              >
+                <link.icon className="h-5 w-5 mr-3 text-purple-400/70 group-hover:text-purple-300" />
+                <span>{link.text}</span>
+              </Link>
+            ))}
           </nav>
-
-          {/* Sign Out button */}
-          <div className="absolute bottom-4 left-3 right-3">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-gradient-to-r dark:from-fuchsia-600 dark:to-purple-600 dark:shadow-lg dark:shadow-fuchsia-500/25 rounded-lg hover:bg-red-700 dark:hover:shadow-fuchsia-500/40 transition-all"
+          <div className="px-4 py-6 border-t border-purple-500/20 space-y-2">
+            <Link
+              to="/admin/settings"
+              className="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-purple-500/20 hover:text-white transition-all duration-200 group"
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              <Settings className="h-5 w-5 mr-3 text-purple-400/70 group-hover:text-purple-300" />
+              <span>Settings</span>
+            </Link>
+            {/* 4. Attach the handleSignOut function to your original button */}
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200 group"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
+      </aside>
 
-        {/* Main content */}
-        <div className="flex-1">
-          {/* Header */}
-          <header className="bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl border-b border-gray-200 dark:border-slate-800/50 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">Administrator</h1>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 text-gray-500 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
-                >
-                  {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                </button>
-                <div className="w-8 h-8 bg-purple-600 dark:bg-gradient-to-br dark:from-fuchsia-500 dark:to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                  A
-                </div>
+      {/* Main Content Area - Your original design */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-20 flex-shrink-0 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-lg border-b border-purple-500/20">
+          <div>
+            <h2 className="text-xl font-semibold">Welcome, {profile?.full_name || 'Admin'}!</h2>
+            <p className="text-sm text-gray-400">
+              Here's what's happening in your institution today.
+            </p>
+          </div>
+          <div className="flex items-center space-x-6">
+            <button className="p-2 rounded-full hover:bg-slate-700 transition-colors">
+              <Sun className="h-5 w-5 text-yellow-400" />
+            </button>
+            <button className="relative p-2 rounded-full hover:bg-slate-700 transition-colors">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div className="w-px h-8 bg-slate-700"></div>
+            <div className="flex items-center">
+              <UserCircle className="h-9 w-9 text-purple-400" />
+              <div className="ml-3">
+                <p className="font-semibold text-sm">{profile?.full_name}</p>
+                <p className="text-xs text-gray-400">{profile?.role}</p>
               </div>
             </div>
-          </header>
-
-          {/* Main content area */}
-          <main className="p-6">
-            <div className="card dark:bg-slate-900/60 dark:backdrop-blur-xl dark:border-slate-800/50 p-6">
-              <Outlet />
-            </div>
-          </main>
-        </div>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto p-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

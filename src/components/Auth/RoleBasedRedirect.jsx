@@ -1,57 +1,34 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/AuthStore.jsx';
-import { Loader } from 'lucide-react';
+// File Path: src/components/Auth/RoleBasedRedirect.jsx
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../../store/AuthStore"; // Corrected Import
 
 const RoleBasedRedirect = () => {
-  // --- FIX: Get the new loading and error states ---
-  const { userProfile, isAuthenticated, isLoadingProfile, profileError } = useAuthStore();
+  const { profile } = useAuthStore();
 
-  // If we are actively trying to fetch the profile, show the loader.
-  if (isLoadingProfile) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <Loader className="h-12 w-12 animate-spin text-blue-600" />
-        <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">Loading your dashboard...</p>
-      </div>
-    );
-  }
-  
-  // --- NEW: If the profile fetch failed, show an error message ---
-  if (profileError) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600">Failed to Load Profile</h1>
-            <p className="text-gray-600 mt-2">Could not retrieve your user data. Please try logging in again.</p>
-            <p className="text-xs text-gray-500 mt-4">Error: {profileError}</p>
-        </div>
-      </div>
-    );
-  }
+  // Determine the dashboard path based on the user's role from their profile.
+  const getDashboardPath = () => {
+    const role = profile?.role;
+    switch (role) {
+      case "admin":
+        return "/admin";
+      case "hod":
+        return "/hod";
+      case "faculty":
+        return "/faculty";
+      case "program_coordinator":
+        return "/coordinator";
+      case "student":
+        return "/student";
+      default:
+        // If role is unknown or missing, send to login as a fallback.
+        return "/login";
+    }
+  };
 
-  // If the user is authenticated and we have their profile, redirect them.
-  if (isAuthenticated && userProfile) {
-      const role = userProfile.role;
-      switch (role) {
-        case 'admin':
-          return <Navigate to="/admin" replace />;
-        case 'hod':
-          return <Navigate to="/hod" replace />;
-        case 'faculty':
-          return <Navigate to="/faculty" replace />;
-        case 'program_coordinator':
-          return <Navigate to="/coordinator" replace />;
-        case 'student':
-            return <Navigate to="/student" replace />;
-        default:
-          // If role is unknown, send to login.
-          return <Navigate to="/login" replace />;
-      }
-  }
+  const dashboardPath = getDashboardPath();
 
-  // Default fallback: if not authenticated, go to login.
-  return <Navigate to="/login" replace />;
+  // Use the Navigate component to perform the redirection.
+  return <Navigate to={dashboardPath} replace />;
 };
 
 export default RoleBasedRedirect;

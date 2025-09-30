@@ -1,27 +1,41 @@
-// src/components/Auth/ProtectedRoute.jsx
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/AuthStore.jsx';
+// File Path: src/components/Auth/ProtectedRoute.jsx
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../../store/AuthStore"; // Corrected Import
+import PropTypes from "prop-types";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, userProfile } = useAuthStore();
-  const location = useLocation();
-  const role = userProfile?.role;
+  const { loading, session, profile } = useAuthStore();
 
-  // 1. If user is not authenticated, redirect to the login page.
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // While the session is being initialized, show a loading indicator.
+  // This is crucial to prevent redirecting before the auth state is known.
+  if (loading) {
+    return <div>Loading...</div>; // Or a spinner component
   }
 
-  // 2. If a route requires a specific role, check if the user has it.
-  // If not, redirect to the "Access Denied" page.
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+  // If not loading and there's no session, redirect to the login page.
+  if (!session) {
+    return <Navigate to="/login" />;
   }
   
-  // 3. If all checks pass, show the requested page.
-  // All verification logic has been removed from this file.
-  return children;
+  // If there is a session, but no specific roles are required, render the children.
+  // This is used for the main "/" route that leads to RoleBasedRedirect.
+  if (!allowedRoles) {
+    return children;
+  }
+
+  // If roles are specified, check if the user's role is included.
+  const userRole = profile?.role;
+  if (allowedRoles.includes(userRole)) {
+    return children;
+  }
+
+  // If the user's role is not allowed, redirect to an unauthorized page.
+  return <Navigate to="/unauthorized" />;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ProtectedRoute;
