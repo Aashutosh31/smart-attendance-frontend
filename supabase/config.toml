@@ -1,3 +1,6 @@
+
 # supabase/config.toml
 # This is the main configuration file for your Supabase project.
 
+[functions.create-user]
+entrypoint = "./functions/create-user/index.js"
