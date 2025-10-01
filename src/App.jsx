@@ -20,6 +20,9 @@ import FacultyDashboard from "./components/Faculty/Dashboard.jsx";
 import HodDashboard from "./components/HOD/HodDashboard.jsx";
 import StudentDashboard from "./components/Student/StudentDashboard.jsx";
 import ProgramCoordinatorDashboard from "./components/Coordinator/ProgramCoordinator.jsx";
+import HodOverviewPage from "./components/HOD/HodOverviewPage.jsx";
+
+
 
 // --- VERIFICATION PAGES ---
 import AdminVerificationPage from "./components/Admin/AdminVerificationPage.jsx";
@@ -92,12 +95,13 @@ function App() {
           <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
             <Route index element={<FacultyAttendancePage />} />
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
-            <Route path="manage-coordinators" element={<ManageCoordinatorsPage />} />
-            <Route path="manage-courses" element={<ManageCoursesPage />} />
+            <Route path="coordinators" element={<ManageCoordinatorsPage />} />
+            <Route path="courses" element={<ManageCoursesPage />} />
             <Route path="manage-faculty" element={<ManageFacultyPage />} />
-            <Route path="faculty-reports" element={<FacultyReportsPage />} />
-            <Route path="student-reports" element={<StudentReportsPage />} />
+            <Route path="reports" element={<FacultyReportsPage />} />
+            <Route path="students" element={<StudentReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="overview" element={<HodOverviewPage />} />
           </Route>
           <Route path="/hod/verify" element={<ProtectedRoute allowedRoles={['hod']}><HodVerificationPage /></ProtectedRoute>} />
           

@@ -41,7 +41,7 @@ const FacultyAttendancePage = () => {
         {/* You can add filters here later, e.g., a date picker */}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
