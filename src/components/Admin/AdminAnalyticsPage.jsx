@@ -181,7 +181,7 @@ useEffect(() => {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className={`px-4 py-2 rounded-xl border transition-colors duration-200 ${
+            className={`px-7 py-2 rounded-xl border transition-colors duration-200 ${
               darkMode 
                 ? 'bg-slate-800 border-slate-600 text-white' 
                 : 'bg-white border-slate-300 text-slate-900'

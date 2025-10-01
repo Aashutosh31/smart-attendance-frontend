@@ -1,9 +1,10 @@
 // File Path: src/components/Auth/CollegeRegistrationPage.jsx
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Building2, KeyRound, Mail, User, Shield } from "lucide-react";
-import { useAuthStore } from "../../store/AuthStore"; // Corrected Import
+import { supabase } from "../../supabaseClient";
 
 const CollegeRegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -14,104 +15,151 @@ const CollegeRegistrationPage = () => {
     password: "",
     confirmPassword: "",
   });
+  
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signUpAdmin, loading } = useAuthStore(); // Correctly get from store
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       return toast.error("Passwords do not match!");
     }
+    
+    if (formData.password.length < 6) {
+      return toast.error("Password must be at least 6 characters long!");
+    }
 
-    const { error } = await signUpAdmin(formData);
+    setLoading(true);
 
-    if (error) {
-        toast.error(error.message);
-    } else {
-        toast.success("Registration successful! Please check your email to verify your account.");
-        navigate("/login");
+    try {
+      // Step 1: Create admin user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            role: 'admin',
+            // Don't set college_id yet - we'll create it after
+          }
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Step 2: Create college entry
+      const { data: collegeData, error: collegeError } = await supabase
+        .from('colleges')
+        .insert({
+          name: formData.collegeName,
+          college_id_text: formData.collegeId,
+          created_at: new Date().toISOString(),
+          created_by: authData.user.id
+        })
+        .select()
+        .single();
+
+      if (collegeError) throw collegeError;
+
+      // Step 3: Update admin profile with college_id
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          college_id: collegeData.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
+
+      toast.success('College and admin account created successfully!');
+      toast.info('Please check your email to verify your account.');
+      
+      // Redirect to login
+      navigate('/login');
+      
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      
+      if (error.code === '23505') {
+        toast.error('College ID already exists. Please choose a different one.');
+      } else {
+        toast.error(error.message || 'Failed to create admin account');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // UI Code below is unchanged...
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white relative overflow-hidden">
-      {/* Visual elements */}
-      <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-blue-500/30 blur-3xl animate-pulse delay-2000"></div>
-
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col md:flex-row">
-        <aside className="hidden md:flex md:w-1/2 lg:w-7/12 flex-col justify-between bg-gradient-to-br from-purple-700/20 via-indigo-700/20 to-purple-700/20 backdrop-blur-xl p-8 lg:p-12 border-r border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-          <header>
-            <p className="text-sm tracking-widest text-purple-400 uppercase">
-              AttendTrack
-            </p>
-            <h1 className="mt-2 text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-fuchsia-400 to-purple-500 bg-clip-text text-transparent">
-              Register your college admin account
-            </h1>
-            <p className="mt-4 max-w-md text-sm text-gray-300">
-              Fast, secure attendance management. Create your institution and
-              the first admin in minutes.
-            </p>
-          </header>
-
-          <footer className="mt-8 text-xs text-gray-400">
-            © {new Date().getFullYear()} AttendTrack. All rights reserved.
-          </footer>
-        </aside>
-
-        <section className="flex w-full md:w-1/2 lg:w-5/12 items-center justify-center p-6 sm:p-8 lg:p-12">
-          <div className="w-full max-w-lg rounded-2xl border border-purple-500/30 bg-black/50 shadow-[0_0_25px_rgba(139,92,246,0.4)] backdrop-blur-xl">
-            <div className="border-b border-purple-500/20 px-6 py-5">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-fuchsia-500 bg-clip-text text-transparent">
-                Register Your College
-              </h2>
-              <p className="mt-1 text-sm text-gray-400">
-                Create an admin account for AttendTrack
-              </p>
-            </div>
-
-            <form onSubmit={handleRegister} className="space-y-4 p-6">
-              {[
-                { id: "collegeName", icon: Building2, placeholder: "College Name", type: "text" },
-                { id: "collegeId", icon: Shield, placeholder: "Unique College ID (e.g., IITB-01)", type: "text" },
-                { id: "fullName", icon: User, placeholder: "Admin's Full Name", type: "text" },
-                { id: "email", icon: Mail, placeholder: "Admin's Email Address", type: "email" },
-                { id: "password", icon: KeyRound, placeholder: "Password", type: "password" },
-                { id: "confirmPassword", icon: KeyRound, placeholder: "Confirm Password", type: "password" },
-              ].map(({ id, icon: Icon, placeholder, type }) => (
-                <div key={id} className="relative">
-                  <input
-                    id={id} name={id} type={type} placeholder={placeholder} required
-                    value={formData[id]} onChange={handleChange}
-                    className="peer w-full rounded-lg border border-purple-500/30 bg-black/60 px-4 py-3 pl-10 text-white placeholder-gray-400 outline-none focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-500/50 transition"
-                  />
-                  <Icon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-fuchsia-400 transition" />
-                </div>
-              ))}
-
-              <button
-                type="submit" disabled={loading}
-                className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-lg shadow-fuchsia-500/30 hover:scale-[1.02] hover:shadow-fuchsia-500/50 transition disabled:opacity-50"
-              >
-                {loading ? "Registering..." : "Create Account"}
-              </button>
-              
-              <p className="text-center text-sm text-gray-300">
-                Already have an account?{" "}
-                <Link to="/login" className="font-medium text-fuchsia-400 hover:underline">
-                  Sign In
-                </Link>
-              </p>
-            </form>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mb-4">
+            <Building2 className="h-7 w-7 text-white" />
           </div>
-        </section>
+          <h2 className="text-3xl font-bold text-gray-900">Register Your College</h2>
+          <p className="mt-2 text-sm text-gray-600">Create an admin account for Smart Attendance</p>
+        </div>
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {[
+            { id: "collegeName", icon: Building2, placeholder: "College Name", type: "text", required: true },
+            { id: "collegeId", icon: Shield, placeholder: "Unique College ID (e.g., IITB-01)", type: "text", required: true },
+            { id: "fullName", icon: User, placeholder: "Admin's Full Name", type: "text", required: true },
+            { id: "email", icon: Mail, placeholder: "Admin's Email Address", type: "email", required: true },
+            { id: "password", icon: KeyRound, placeholder: "Password", type: "password", required: true },
+            { id: "confirmPassword", icon: KeyRound, placeholder: "Confirm Password", type: "password", required: true },
+          ].map(({ id, icon: Icon, placeholder, type, required }) => (
+            <div key={id} className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Icon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id={id}
+                name={id}
+                type={type}
+                required={required}
+                value={formData[id]}
+                onChange={handleChange}
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          >
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <span>Creating Account...</span>
+              </div>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                Sign In
+              </Link>
+            </p>
+          </div>
+        </form>
       </div>
-    </main>
+    </div>
   );
 };
 
