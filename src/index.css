@@ -544,3 +544,6 @@ border-radius: calc(1rem - 2px);
 }
 
 }
+.input-field-custom {
+  @apply block w-full px-4 py-2 rounded-lg border border-gray-300 placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition;
+}

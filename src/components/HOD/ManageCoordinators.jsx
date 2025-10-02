@@ -17,7 +17,39 @@ const ManageCoordinators = () => {
     confirmPassword: "",
   });
 
-  // Fetch coordinators for this college
+  if (loadingProfile)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl text-gray-400 select-none">
+        Loading profile...
+      </div>
+    );
+  if (!session)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl text-red-500 select-none">
+        Not authenticated. Please sign in.
+      </div>
+    );
+  if (!profile)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl text-gray-600 select-none">
+        Loading profile...
+      </div>
+    );
+  if (!profile.college_id)
+    return (
+      <div className="flex justify-center items-center h-screen text-center text-red-600 px-4">
+        <div>
+          <p className="font-semibold text-2xl mb-2">
+            Invalid college information.
+          </p>
+          <p className="text-sm text-gray-400">
+            Please contact an administrator.<br />
+            (college_id missing in your profile)
+          </p>
+        </div>
+      </div>
+    );
+
   const fetchCoordinators = useCallback(async () => {
     setLoading(true);
     try {
@@ -25,44 +57,32 @@ const ManageCoordinators = () => {
         .from("coordinators")
         .select("*")
         .eq("college_id", profile.college_id);
+
       if (error) throw error;
       setCoordinators(data ?? []);
-    } catch (error) {
-      toast.error(error.message || "Failed to fetch coordinators");
+    } catch {
+      toast.error("Failed to fetch coordinators");
       setCoordinators([]);
     } finally {
       setLoading(false);
     }
   }, [profile.college_id]);
 
-  useEffect(() => { 
-    if (profile && profile.college_id && session && !loadingProfile) {
-      fetchCoordinators();
-    }
-  }, [fetchCoordinators, profile, session, loadingProfile]);
+  useEffect(() => {
+    fetchCoordinators();
+  }, [fetchCoordinators]);
 
-  // Defensive guards
-  if (loadingProfile) return <div>Loading...</div>;
-  if (!session) return <div className="text-red-600 p-8 text-center text-lg font-bold">Not authenticated. Please sign in.</div>;
-  if (!profile) return <div className="text-gray-500 p-8 text-center text-lg font-bold">Loading profile…</div>;
-  if (!profile.college_id)
-    return (
-      <div className="text-red-600 p-8 text-center text-lg font-bold">
-        Invalid college information.<br />
-        (college_id missing in your profile, contact admin)
-      </div>
-    );
+  const handleChange = (e) =>
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  // Input handler
-  const handleChange = (e) => setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  // Coordinator add: Auth + Table row
   const handleAddCoordinator = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) return toast.error("Passwords do not match!");
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
     setLoading(true);
     try {
-      // Step 1: Register as Auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -75,8 +95,8 @@ const ManageCoordinators = () => {
           },
         },
       });
-      if (authError || !authData?.user?.id) throw authError || new Error("Coordinator signup failed");
-      // Step 2: Insert to coordinators table
+      if (authError || !authData?.user?.id) throw authError || new Error("Signup failed");
+
       const { error: insertError } = await supabase.from("coordinators").insert([
         {
           id: authData.user.id,
@@ -88,6 +108,7 @@ const ManageCoordinators = () => {
         },
       ]);
       if (insertError) throw insertError;
+
       toast.success("Coordinator added! Please verify their email.");
       setFormData({ fullName: "", email: "", department: "", password: "", confirmPassword: "" });
       setShowAddForm(false);
@@ -99,88 +120,183 @@ const ManageCoordinators = () => {
     }
   };
 
-  // Delete
   const handleDelete = async (id, fullName) => {
-    if (!window.confirm(`Delete "${fullName}"?`)) return;
+    if (!window.confirm(`Are you sure you want to delete "${fullName}"?`)) return;
     setLoading(true);
     try {
       const { error } = await supabase.from("coordinators").delete().eq("id", id);
       if (error) throw error;
       toast.success("Coordinator deleted.");
       fetchCoordinators();
-    } catch { toast.error("Failed to delete coordinator"); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error("Failed to delete coordinator");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter display
-  const filtered = coordinators.filter((c) =>
-    c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.department.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = coordinators.filter(
+    (c) =>
+      c.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      c.department.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-10">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Manage Coordinators</h1>
-        <button className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                onClick={() => setShowAddForm((s) => !s)}>
+    <div className="max-w-5xl mx-auto p-8 space-y-10 select-none">
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide">
+          Manage Coordinators
+        </h1>
+        <button
+          onClick={() => setShowAddForm((s) => !s)}
+          className="rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-6 py-3 font-semibold hover:scale-105 hover:shadow-xl transform transition duration-300"
+        >
           {showAddForm ? "Cancel" : "Add Coordinator"}
         </button>
       </div>
 
       {showAddForm && (
-        <form className="bg-white rounded-lg shadow p-6 space-y-4" onSubmit={handleAddCoordinator}>
-          <input name="fullName" required className="input-field w-full" value={formData.fullName}
-            onChange={handleChange} placeholder="Full Name" />
-          <input name="email" required type="email" className="input-field w-full" value={formData.email}
-            onChange={handleChange} placeholder="Email Address" />
-          <input name="department" required className="input-field w-full" value={formData.department}
-            onChange={handleChange} placeholder="Department" />
-          <input name="password" required type="password" className="input-field w-full"
-            value={formData.password} onChange={handleChange} placeholder="Password" />
-          <input name="confirmPassword" required type="password" className="input-field w-full"
-            value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm Password" />
-          <button type="submit" disabled={loading}
-                  className="w-full py-3 font-semibold text-white rounded bg-green-600 hover:bg-green-700 transition disabled:opacity-50">
-            {loading ? "Adding…" : "Add Coordinator"}
+        <form
+          onSubmit={handleAddCoordinator}
+          className="bg-white bg-opacity-40 backdrop-blur-lg border border-gray-300 rounded-xl p-6 space-y-5 shadow-lg"
+        >
+          <div>
+            <label className="font-semibold text-gray-700">Full Name</label>
+            <input
+              className="input-field-custom"
+              name="fullName"
+              placeholder="Prof. John Doe"
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold text-gray-700">Email</label>
+            <input
+              className="input-field-custom"
+              name="email"
+              type="email"
+              placeholder="coordinator@abc.edu"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold text-gray-700">Department</label>
+            <input
+              className="input-field-custom"
+              name="department"
+              placeholder="Department (e.g. CSE, ME)"
+              value={formData.department}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold text-gray-700">Password</label>
+            <input
+              className="input-field-custom"
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold text-gray-700">Confirm Password</label>
+            <input
+              className="input-field-custom"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold hover:shadow-xl transition disabled:opacity-50"
+          >
+            {loading ? "Adding Coordinator..." : "Add Coordinator"}
           </button>
         </form>
       )}
 
-      <input className="input-field w-full max-w-md mb-4" placeholder="Search Coordinator"
-             value={search} onChange={(e) => setSearch(e.target.value)} />
+      <input
+        type="search"
+        placeholder="Search Coordinators..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="input-field-custom max-w-md w-full"
+      />
 
-      <div className="overflow-x-auto rounded-lg shadow border">
-        <table className="min-w-full text-left">
-          <thead className="bg-blue-100">
-          <tr>
-            <th className="py-2 px-4 font-semibold">Name</th>
-            <th className="py-2 px-4 font-semibold">Email</th>
-            <th className="py-2 px-4 font-semibold">Department</th>
-            <th className="py-2 px-4 font-semibold">Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-          {filtered.length === 0 && (
+      <div className="overflow-auto rounded-xl shadow-lg border border-gray-300 bg-white bg-opacity-40 backdrop-blur-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-indigo-100">
             <tr>
-              <td colSpan={4} className="text-center py-10 text-gray-500">No coordinators found for this college.</td>
+              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+                Name
+              </th>
+              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+                Email
+              </th>
+              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+                Department
+              </th>
+              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+                Actions
+              </th>
             </tr>
-          )}
-          {filtered.map((c) => (
-            <tr key={c.id} className="odd:bg-blue-50 even:bg-white">
-              <td className="py-2 px-4">{c.full_name}</td>
-              <td className="py-2 px-4">{c.email}</td>
-              <td className="py-2 px-4">{c.department}</td>
-              <td className="py-2 px-4">
-                <button className="text-red-600 font-bold hover:underline"
-                        onClick={() => handleDelete(c.id, c.full_name)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          </thead>
+          <tbody className="divide-y divide-indigo-200">
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="text-center py-10 text-indigo-500 font-semibold"
+                >
+                  No Coordinators found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((c) => (
+              <tr
+                key={c.id}
+                className="hover:bg-indigo-50 transition cursor-pointer"
+              >
+                <td className="px-6 py-4">{c.full_name}</td>
+                <td className="px-6 py-4">{c.email}</td>
+                <td className="px-6 py-4">{c.department}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    className="text-rose-600 font-semibold hover:text-rose-800 transition"
+                    onClick={() => handleDelete(c.id, c.full_name)}
+                    title="Delete Coordinator"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-        {loading && <div className="text-center py-6">Loading…</div>}
+        {loading && (
+          <div className="p-6 text-center font-semibold text-indigo-700">
+            Loading...
+          </div>
+        )}
       </div>
     </div>
   );
