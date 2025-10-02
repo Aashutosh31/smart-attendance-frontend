@@ -49,11 +49,13 @@ import CoordinatorAttendancePage from "./components/Coordinator/CoordinatorAtten
 import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.jsx";
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
+
 function App() {
-  // This hook runs once when the app mounts, initializing the auth state.
+  const initializeSession = useAuthStore((state) => state.initializeSession);
+
   useEffect(() => {
-    useAuthStore.getState().initializeSession();
-  }, []);
+    initializeSession();
+  }, [initializeSession]);
 
   return (
     <>
