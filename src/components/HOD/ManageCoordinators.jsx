@@ -19,30 +19,30 @@ const ManageCoordinators = () => {
 
   if (loadingProfile)
     return (
-      <div className="flex justify-center items-center h-screen text-xl text-gray-400 select-none">
+      <div className="flex justify-center items-center h-screen text-xl text-gray-400 dark:text-gray-300 select-none">
         Loading profile...
       </div>
     );
   if (!session)
     return (
-      <div className="flex justify-center items-center h-screen text-xl text-red-500 select-none">
+      <div className="flex justify-center items-center h-screen text-xl text-red-500 dark:text-red-400 select-none">
         Not authenticated. Please sign in.
       </div>
     );
   if (!profile)
     return (
-      <div className="flex justify-center items-center h-screen text-xl text-gray-600 select-none">
+      <div className="flex justify-center items-center h-screen text-xl text-gray-600 dark:text-gray-400 select-none">
         Loading profile...
       </div>
     );
   if (!profile.college_id)
     return (
-      <div className="flex justify-center items-center h-screen text-center text-red-600 px-4">
+      <div className="flex justify-center items-center h-screen text-center text-red-600 dark:text-red-400 px-4">
         <div>
           <p className="font-semibold text-2xl mb-2">
             Invalid college information.
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             Please contact an administrator.<br />
             (college_id missing in your profile)
           </p>
@@ -143,14 +143,14 @@ const ManageCoordinators = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-10 select-none">
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide dark:text-indigo-400">
+    <div className="max-w-6xl mx-auto p-8 space-y-10 select-none">
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent tracking-wide">
           Manage Coordinators
         </h1>
         <button
           onClick={() => setShowAddForm((s) => !s)}
-          className="rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-6 py-3 font-semibold hover:scale-105 hover:shadow-xl transform transition duration-300"
+          className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-500 dark:from-purple-700 dark:to-indigo-600 text-white px-6 py-3 font-semibold hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30 dark:hover:shadow-purple-700/40 transform transition duration-300"
         >
           {showAddForm ? "Cancel" : "Add Coordinator"}
         </button>
@@ -159,12 +159,12 @@ const ManageCoordinators = () => {
       {showAddForm && (
         <form
           onSubmit={handleAddCoordinator}
-          className="bg-white bg-opacity-40 backdrop-blur-lg border border-gray-300 rounded-xl p-6 space-y-5 shadow-lg"
+          className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200 dark:border-gray-700 rounded-2xl p-8 space-y-6 shadow-2xl"
         >
           <div>
-            <label className="font-semibold text-gray-700">Full Name</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="fullName"
               placeholder="Prof. John Doe"
               value={formData.fullName}
@@ -174,9 +174,9 @@ const ManageCoordinators = () => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Email</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Email</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="email"
               type="email"
               placeholder="coordinator@abc.edu"
@@ -187,9 +187,9 @@ const ManageCoordinators = () => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Department</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Department</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="department"
               placeholder="Department (e.g. CSE, ME)"
               value={formData.department}
@@ -199,9 +199,9 @@ const ManageCoordinators = () => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Password</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Password</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="password"
               type="password"
               placeholder="Password"
@@ -212,9 +212,9 @@ const ManageCoordinators = () => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Confirm Password</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="confirmPassword"
               type="password"
               placeholder="Confirm Password"
@@ -227,7 +227,7 @@ const ManageCoordinators = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold hover:shadow-xl transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white font-semibold hover:shadow-2xl hover:shadow-green-500/30 dark:hover:shadow-green-700/40 hover:scale-[1.02] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding Coordinator..." : "Add Coordinator"}
           </button>
@@ -239,33 +239,33 @@ const ManageCoordinators = () => {
         placeholder="Search Coordinators..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="input-field-custom max-w-md w-full"
+        className="max-w-md w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent transition duration-200 shadow-md"
       />
 
-      <div className="overflow-auto rounded-xl shadow-lg border border-gray-300 bg-white bg-opacity-40 backdrop-blur-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-indigo-100">
+      <div className="overflow-auto rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/70 dark:to-purple-900/70">
             <tr>
-              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+              <th className="text-left px-6 py-4 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">
                 Name
               </th>
-              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+              <th className="text-left px-6 py-4 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">
                 Email
               </th>
-              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+              <th className="text-left px-6 py-4 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">
                 Department
               </th>
-              <th className="text-left px-6 py-3 font-medium text-indigo-700">
+              <th className="text-left px-6 py-4 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-indigo-200 dark:text-white">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/40 dark:bg-gray-900/40">
             {filtered.length === 0 && (
               <tr>
                 <td
                   colSpan={4}
-                  className="text-center py-10 text-indigo-500 font-semibold"
+                  className="text-center py-12 text-indigo-500 dark:text-indigo-400 font-semibold text-lg"
                 >
                   No Coordinators found.
                 </td>
@@ -274,14 +274,14 @@ const ManageCoordinators = () => {
             {filtered.map((c) => (
               <tr
                 key={c.id}
-                className="hover:bg-indigo-500 transition cursor-pointer"
+                className="hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition duration-200 cursor-pointer"
               >
-                <td className="px-6 py-4">{c.full_name}</td>
-                <td className="px-6 py-4">{c.email}</td>
-                <td className="px-6 py-4">{c.department}</td>
+                <td className="px-6 py-4 text-gray-900 dark:text-gray-100 font-medium">{c.full_name}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{c.email}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{c.department}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    className="text-rose-700 font-semibold hover:text-rose-900 transition"
+                    className="text-rose-600 dark:text-rose-400 font-semibold hover:text-rose-800 dark:hover:text-rose-300 hover:underline transition duration-200"
                     onClick={() => handleDelete(c.id, c.full_name)}
                     title="Delete Coordinator"
                   >
@@ -293,7 +293,7 @@ const ManageCoordinators = () => {
           </tbody>
         </table>
         {loading && (
-          <div className="p-6 text-center font-semibold text-indigo-700">
+          <div className="p-6 text-center font-semibold text-indigo-700 dark:text-indigo-400 text-lg">
             Loading...
           </div>
         )}

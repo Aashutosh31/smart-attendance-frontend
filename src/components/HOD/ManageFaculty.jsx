@@ -18,14 +18,14 @@ const ManageFaculty = () => {
   });
 
   if (loadingProfile)
-    return <div className="text-center py-20 text-xl">Loading profile...</div>;
+    return <div className="text-center py-20 text-xl text-gray-400 dark:text-gray-300">Loading profile...</div>;
   if (!session)
-    return <div className="text-center py-20 text-red-600">Not authenticated. Please login.</div>;
+    return <div className="text-center py-20 text-red-600 dark:text-red-400 font-semibold">Not authenticated. Please login.</div>;
   if (!profile)
-    return <div className="text-center py-20 text-gray-600">Loading profile...</div>;
+    return <div className="text-center py-20 text-gray-600 dark:text-gray-400">Loading profile...</div>;
   if (!profile.college_id)
     return (
-      <div className="text-center py-20 text-red-600">
+      <div className="text-center py-20 text-red-600 dark:text-red-400 font-medium">
         Invalid college information. Please contact admin.
       </div>
     );
@@ -131,14 +131,14 @@ const handleAddFaculty = async (e) => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-8 space-y-10 select-none">
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide dark:text-indigo-400">
+    <div className="max-w-6xl mx-auto p-8 space-y-10 select-none">
+      <div className="flex flex-wrap justify-between items-center gap-4">
+        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent tracking-wide">
           Manage Faculty
         </h1>
         <button
           onClick={() => setShowAddForm((s) => !s)}
-          className="rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-6 py-3 font-semibold hover:scale-105 hover:shadow-xl transform transition duration-300"
+          className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-500 dark:from-purple-700 dark:to-indigo-600 text-white px-6 py-3 font-semibold hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30 dark:hover:shadow-purple-700/40 transform transition duration-300"
         >
           {showAddForm ? "Cancel" : "Add Faculty"}
         </button>
@@ -147,12 +147,12 @@ const handleAddFaculty = async (e) => {
       {showAddForm && (
         <form
           onSubmit={handleAddFaculty}
-          className="bg-white bg-opacity-40 backdrop-blur-lg border border-gray-300 rounded-xl p-6 space-y-5 shadow-lg"
+          className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200 dark:border-gray-700 rounded-2xl p-8 space-y-6 shadow-2xl"
         >
           <div>
-            <label className="font-semibold text-gray-700">Full Name</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="fullName"
               placeholder="Prof. John Doe"
               value={formData.fullName}
@@ -162,9 +162,9 @@ const handleAddFaculty = async (e) => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Email</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Email</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="email"
               type="email"
               placeholder="faculty@abc.edu"
@@ -175,9 +175,9 @@ const handleAddFaculty = async (e) => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Subjects (comma separated)</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Subjects (comma separated)</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="subjects"
               placeholder="e.g. Mathematics, Physics"
               value={formData.subjects}
@@ -186,9 +186,9 @@ const handleAddFaculty = async (e) => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Password</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Password</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="password"
               type="password"
               placeholder="Password"
@@ -199,9 +199,9 @@ const handleAddFaculty = async (e) => {
           </div>
 
           <div>
-            <label className="font-semibold text-gray-700">Confirm Password</label>
+            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
             <input
-              className="input-field-custom"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-600 focus:border-transparent transition duration-200"
               name="confirmPassword"
               type="password"
               placeholder="Confirm Password"
@@ -214,7 +214,7 @@ const handleAddFaculty = async (e) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold hover:shadow-xl transition disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white font-semibold hover:shadow-2xl hover:shadow-green-500/30 dark:hover:shadow-green-700/40 hover:scale-[1.02] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding Faculty..." : "Add Faculty"}
           </button>
@@ -226,37 +226,37 @@ const handleAddFaculty = async (e) => {
         placeholder="Search Faculty..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="input-field-custom max-w-md w-full mb-4"
+        className="max-w-md w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent transition duration-200 shadow-md mb-4"
       />
 
-      <div className="overflow-auto rounded-xl shadow-lg border border-gray-300 bg-white bg-opacity-40 backdrop-blur-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-indigo-100">
+      <div className="overflow-auto rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/70 dark:to-purple-900/70">
             <tr>
-              <th className="text-left text-indigo-700 px-6 py-3 font-medium">Name</th>
-              <th className="text-left text-indigo-700 px-6 py-3 font-medium">Email</th>
-              <th className="text-left text-indigo-700 px-6 py-3 font-medium">Department</th>
-              <th className="text-left text-indigo-700 px-6 py-3 font-medium">Subjects</th>
-              <th className="text-left text-indigo-700 px-6 py-3 font-medium">Actions</th>
+              <th className="text-left text-indigo-700 dark:text-indigo-300 px-6 py-4 font-semibold uppercase tracking-wide text-sm">Name</th>
+              <th className="text-left text-indigo-700 dark:text-indigo-300 px-6 py-4 font-semibold uppercase tracking-wide text-sm">Email</th>
+              <th className="text-left text-indigo-700 dark:text-indigo-300 px-6 py-4 font-semibold uppercase tracking-wide text-sm">Department</th>
+              <th className="text-left text-indigo-700 dark:text-indigo-300 px-6 py-4 font-semibold uppercase tracking-wide text-sm">Subjects</th>
+              <th className="text-left text-indigo-700 dark:text-indigo-300 px-6 py-4 font-semibold uppercase tracking-wide text-sm">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y dark:text-white">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/40 dark:bg-gray-900/40">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-10 text-indigo-500 font-semibold">
+                <td colSpan={5} className="text-center py-12 text-indigo-500 dark:text-indigo-400 font-semibold text-lg">
                   No faculty found.
                 </td>
               </tr>
             )}
             {filtered.map((f) => (
-              <tr key={f.id} className="hover:bg-indigo-500 cursor-pointer">
-                <td className="px-6 py-4">{f.full_name}</td>
-                <td className="px-6 py-4">{f.email}</td>
-                <td className="px-6 py-4">{f.department}</td>
-                <td className="px-6 py-4">{f.subjects?.join(", ")}</td>
+              <tr key={f.id} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition duration-200 cursor-pointer">
+                <td className="px-6 py-4 text-gray-900 dark:text-gray-100 font-medium">{f.full_name}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{f.email}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{f.department}</td>
+                <td className="px-6 py-4 text-gray-700 dark:text-gray-300">{f.subjects?.join(", ")}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    className="text-red-700 font-semibold hover:text-red-800"
+                    className="text-red-600 dark:text-red-400 font-semibold hover:text-red-800 dark:hover:text-red-300 hover:underline transition duration-200"
                     onClick={() => handleDelete(f.id, f.full_name)}
                   >
                     Delete
@@ -267,7 +267,7 @@ const handleAddFaculty = async (e) => {
           </tbody>
         </table>
         {loading && (
-          <div className="py-6 text-indigo-700 font-semibold text-center">
+          <div className="py-6 text-indigo-700 dark:text-indigo-400 font-semibold text-center text-lg">
             Loading...
           </div>
         )}
