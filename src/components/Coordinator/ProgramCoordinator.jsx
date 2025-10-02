@@ -34,7 +34,7 @@ const ProgramCoordinatorDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex">
+    <div className="min-h-screen dark:bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex">
       {/* Sidebar */}
       <div className="w-64 glass-card border-r border-gray-200 dark:border-slate-800/50 p-6 space-y-6">
         {/* Header */}
