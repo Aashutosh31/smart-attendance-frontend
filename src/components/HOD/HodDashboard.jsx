@@ -66,12 +66,13 @@ const HodDashboard = () => {
 
   const navLinks = [
     {icon:User2Icon, text:'Faculty Attendance',path:'/hod/faculty-attendance',color:'from-yellow-500 to-amber-500'},
+    {icon:UserCircle, text:'Add Faculty',path:'/hod/faculty',color:'from-pink-500 to-rose-500'},
     { icon: LayoutDashboard, text: 'Overview', path: '/hod/overview', color: 'from-blue-500 to-cyan-500' },
     { icon: BookOpen, text: 'Manage Courses', path: '/hod/courses', color: 'from-emerald-500 to-teal-500' },
     { icon: UserPlus2, text: 'Manage Coordinators', path: '/hod/coordinators', color: 'from-purple-500 to-indigo-500' },
     { icon: GraduationCap, text: 'View Students', path: '/hod/students', color: 'from-orange-500 to-red-500' },
     { icon: BarChart3, text: 'Reports', path: '/hod/reports', color: 'from-pink-500 to-rose-500' },
-    {icon:SettingsIcon, text:'Settings',path:'/hod/settings',color:'from-pink-500 to-rose-500'}
+    {icon:SettingsIcon, text:'Settings',path:'/hod/settings',color:'from-pink-500 to-rose-500'},
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -91,7 +92,7 @@ const HodDashboard = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed left-0 top-0 z-50 h-full transition-all duration-300 ${
+      <div className={`fixed left-0 top-0  z-50 h-full transition-all duration-300 ${
         sidebarExpanded ? 'w-72' : 'w-20'
       } ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -102,7 +103,7 @@ const HodDashboard = () => {
             : 'bg-white/80 border-slate-200/50'
         }`}>
           {/* Logo Section */}
-          <div className="p-6 border-b border-slate-200/10">
+          <div className="p-3 border-b border-slate-200/10">
             {sidebarExpanded ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -189,7 +190,7 @@ const HodDashboard = () => {
           </nav>
 
           {/* Bottom Section */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 space-y-3">
+          <div className="absolute bottom-0 left-0 right-0 p-2 space-y-3">
             {/* Profile Card */}
             <div className={`p-4 rounded-xl backdrop-blur-sm border transition-colors duration-300 ${
               darkMode 

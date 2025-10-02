@@ -35,7 +35,7 @@ import DashboardOverview from "./components/Faculty/DashboardOverview.jsx";
 import CoursesPage from "./components/Faculty/CoursesPage.jsx";
 import AnalyticsPage from "./components/Faculty/AnalyticsPage.jsx";
 import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
-import ManageFacultyPage from "./components/Admin/ManageFaculty.jsx";
+import ManageFacultyPage from "./components/HOD/ManageFaculty.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
 import ManageHodsPage from "./components/Admin/ManageHods.jsx";
 import ViewStudentsPage from "./components/Admin/ViewStudents.jsx";
@@ -87,7 +87,6 @@ function App() {
             <Route path="analytics" element={<AdminAnalyticsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="manage-hods" element={<ManageHodsPage />} />
-            <Route path="manage-faculty" element={<ManageFacultyPage />} />
             <Route path="view-students" element={<ViewStudentsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
@@ -99,7 +98,7 @@ function App() {
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
             <Route path="coordinators" element={<ManageCoordinatorsPage />} />
             <Route path="courses" element={<ManageCoursesPage />} />
-            <Route path="manage-faculty" element={<ManageFacultyPage />} />
+            <Route path="faculty" element={<ManageFacultyPage />} />
             <Route path="reports" element={<FacultyReportsPage />} />
             <Route path="students" element={<StudentReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
