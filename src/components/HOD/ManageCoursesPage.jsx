@@ -186,7 +186,7 @@ const ManageCoursesPage = () => {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Manage Courses</h1>
+        <h1 className="text-3xl font-bold dark:text-indigo-400">Manage Courses</h1>
         {profile.role === 'hod' && (
           <button
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
@@ -274,7 +274,7 @@ const ManageCoursesPage = () => {
               </tr>
             )}
             {filteredCourses.map((course) => (
-              <tr key={course.id} className="hover:bg-gray-50">
+              <tr key={course.id} className="hover:bg-gray-50 dark:text-white hover:dark:bg-gray-700">
                 <td className="py-2 px-4">{course.name}</td>
                 <td className="py-2 px-4">{course.code}</td>
                 <td className="py-2 px-4">{course.description}</td>

@@ -133,7 +133,7 @@ const handleAddFaculty = async (e) => {
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-10 select-none">
       <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide">
+        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide dark:text-indigo-400">
           Manage Faculty
         </h1>
         <button
@@ -240,7 +240,7 @@ const handleAddFaculty = async (e) => {
               <th className="text-left text-indigo-700 px-6 py-3 font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-indigo-200">
+          <tbody className="divide-y dark:text-white">
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={5} className="text-center py-10 text-indigo-500 font-semibold">
@@ -249,14 +249,14 @@ const handleAddFaculty = async (e) => {
               </tr>
             )}
             {filtered.map((f) => (
-              <tr key={f.id} className="hover:bg-indigo-50 cursor-pointer">
+              <tr key={f.id} className="hover:bg-indigo-500 cursor-pointer">
                 <td className="px-6 py-4">{f.full_name}</td>
                 <td className="px-6 py-4">{f.email}</td>
                 <td className="px-6 py-4">{f.department}</td>
                 <td className="px-6 py-4">{f.subjects?.join(", ")}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    className="text-red-600 font-semibold hover:text-red-800"
+                    className="text-red-700 font-semibold hover:text-red-800"
                     onClick={() => handleDelete(f.id, f.full_name)}
                   >
                     Delete

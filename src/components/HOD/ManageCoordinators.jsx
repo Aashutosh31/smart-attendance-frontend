@@ -145,7 +145,7 @@ const ManageCoordinators = () => {
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-10 select-none">
       <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide">
+        <h1 className="text-4xl font-extrabold text-indigo-700 tracking-wide dark:text-indigo-400">
           Manage Coordinators
         </h1>
         <button
@@ -260,7 +260,7 @@ const ManageCoordinators = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-indigo-200">
+          <tbody className="divide-y divide-indigo-200 dark:text-white">
             {filtered.length === 0 && (
               <tr>
                 <td
@@ -274,14 +274,14 @@ const ManageCoordinators = () => {
             {filtered.map((c) => (
               <tr
                 key={c.id}
-                className="hover:bg-indigo-50 transition cursor-pointer"
+                className="hover:bg-indigo-500 transition cursor-pointer"
               >
                 <td className="px-6 py-4">{c.full_name}</td>
                 <td className="px-6 py-4">{c.email}</td>
                 <td className="px-6 py-4">{c.department}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    className="text-rose-600 font-semibold hover:text-rose-800 transition"
+                    className="text-rose-700 font-semibold hover:text-rose-900 transition"
                     onClick={() => handleDelete(c.id, c.full_name)}
                     title="Delete Coordinator"
                   >
