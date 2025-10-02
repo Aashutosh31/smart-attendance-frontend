@@ -12,7 +12,6 @@ const ManageFaculty = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    department: "",
     subjects: "",
     password: "",
     confirmPassword: "",
@@ -55,64 +54,60 @@ const ManageFaculty = () => {
   const handleChange = (e) =>
     setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleAddFaculty = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match!");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Sign up as supabase auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            department: formData.department,
-            subjects: formData.subjects.split(",").map((s) => s.trim()),
-            role: "faculty",
-            college_id: profile.college_id,
-          },
-        },
-      });
-      if (authError || !authData?.user?.id) throw authError || new Error("Signup failed");
 
-      // Insert into faculty table
-      const { error: insertError } = await supabase.from("faculty").insert([
-        {
-          id: authData.user.id,
+// Modify handleAddFaculty method:
+const handleAddFaculty = async (e) => {
+  e.preventDefault();
+
+  if (formData.password !== formData.confirmPassword) {
+    return toast.error("Passwords do not match!");
+  }
+  setLoading(true);
+  try {
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
           full_name: formData.fullName,
-          email: formData.email,
-          department: formData.department,
           subjects: formData.subjects.split(",").map((s) => s.trim()),
+          role: "faculty",
           college_id: profile.college_id,
-          created_by: profile.id,
+          department: profile.department, // Set from HOD's department here
         },
-      ]);
-      if (insertError) throw insertError;
+      },
+    });
+    if (authError || !authData?.user?.id) throw authError || new Error("Signup failed");
 
-      toast.success(
-        "Faculty added successfully! Please ask them to verify their email."
-      );
-      setFormData({
-        fullName: "",
-        email: "",
-        department: "",
-        subjects: "",
-        password: "",
-        confirmPassword: "",
-      });
-      setShowAddForm(false);
-      fetchFaculty();
-    } catch (error) {
-      toast.error(error.message || "Failed to add faculty.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { error: insertError } = await supabase.from("faculty").insert([
+      {
+        id: authData.user.id,
+        full_name: formData.fullName,
+        email: formData.email,
+        subjects: formData.subjects.split(",").map((s) => s.trim()),
+        college_id: profile.college_id,
+        department: profile.department, // Set from HOD's department here also
+        created_by: profile.id,
+      },
+    ]);
+    if (insertError) throw insertError;
 
+    toast.success("Faculty added successfully! Please verify their email.");
+    setFormData({
+      fullName: "",
+      email: "",
+      subjects: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setShowAddForm(false);
+    fetchFaculty();
+  } catch (error) {
+    toast.error(error.message || "Failed to add faculty.");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleDelete = async (id, fullName) => {
     if (!window.confirm(`Are you sure to delete "${fullName}"?`)) return;
     setLoading(true);
@@ -174,18 +169,6 @@ const ManageFaculty = () => {
               type="email"
               placeholder="faculty@abc.edu"
               value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="font-semibold text-gray-700">Department</label>
-            <input
-              className="input-field-custom"
-              name="department"
-              placeholder="Department (e.g. CSE, ME)"
-              value={formData.department}
               onChange={handleChange}
               required
             />
