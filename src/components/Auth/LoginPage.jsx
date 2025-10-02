@@ -56,12 +56,6 @@ const LoginPage = () => {
             </h1>
             <p className="text-slate-400 text-base">Sign in to access your dashboard</p>
           </div>
-          
-          <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-slate-700/50"></div>
-            <span className="px-4 text-slate-500 text-sm">OR</span>
-            <div className="flex-1 h-px bg-slate-700/50"></div>
-          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative">
@@ -92,7 +86,7 @@ const LoginPage = () => {
                 <option value="admin" className="bg-slate-800">Admin</option>
                 <option value="hod" className="bg-slate-800">HOD</option>
                 <option value="faculty" className="bg-slate-800">Faculty</option>
-                <option value="program_coordinator" className="bg-slate-800">Program Coordinator</option>
+                <option value="coordinator" className="bg-slate-800">Program Coordinator</option>
                 <option value="student" className="bg-slate-800">Student</option>
               </select>
             </div>

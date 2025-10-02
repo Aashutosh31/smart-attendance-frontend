@@ -15,7 +15,7 @@ const RoleBasedRedirect = () => {
         return "/hod";
       case "faculty":
         return "/faculty";
-      case "program_coordinator":
+      case "coordinator":
         return "/coordinator";
       case "student":
         return "/student";

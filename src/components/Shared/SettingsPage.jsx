@@ -143,7 +143,7 @@ useEffect(() => {
             };
             break;
           
-          case 'program_coordinator':
+          case 'coordinator':
             // Coordinator data
             additionalData = {
               course: userData.course,
@@ -204,7 +204,7 @@ useEffect(() => {
       admin: { label: 'Administrator', color: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300', icon: Shield },
       hod: { label: 'Head of Department', color: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300', icon: Building },
       faculty: { label: 'Faculty Member', color: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300', icon: BookOpen },
-      program_coordinator: { label: 'Program Coordinator', color: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300', icon: GraduationCap },
+      coordinator: { label: 'Program Coordinator', color: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300', icon: GraduationCap },
       student: { label: 'Student', color: 'bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-300', icon: User }
     };
     return roleConfig[role] || { label: 'User', color: 'bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300', icon: User };
@@ -222,7 +222,7 @@ useEffect(() => {
       };
 
       // Add role-specific fields
-      if (profileData.role === 'program_coordinator') {
+      if (profileData.role === 'coordinator') {
         updateData.course = profileData.course;
         updateData.year = parseInt(profileData.year);
       } else if (profileData.role === 'faculty' || profileData.role === 'hod') {
@@ -378,7 +378,7 @@ useEffect(() => {
           </div>
         );
       
-      case 'program_coordinator':
+      case 'coordinator':
         return (
           <>
             <div>
