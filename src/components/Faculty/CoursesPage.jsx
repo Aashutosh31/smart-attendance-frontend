@@ -1,341 +1,239 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  BookOpen, 
-  Plus, 
-  Search, 
-  Edit3, 
-  Trash2, 
-  Users, 
-  Clock,
-  X,
-  User,
-  Hash,
-  FileText
-} from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../supabaseClient';
+import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
 
-const AddEditCourseModal = ({ isOpen, onClose, course = null }) => {
+const ManageCoursesPage = () => {
+  const { profile } = useAuthStore();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
     description: '',
-    credits: '',
-    instructor: ''
   });
 
-  useEffect(() => {
-    if (course) {
-      setFormData({
-        name: course.name,
-        code: course.code,
-        description: course.description,
-        credits: course.credits,
-        instructor: course.instructor
-      });
-    } else {
-      setFormData({ name: '', code: '', description: '', credits: '', instructor: '' });
-    }
-  }, [course, isOpen]);
+  // Fetch courses depending on the user's role
+  const fetchCourses = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (profile.role === 'hod') {
+        // HOD sees only courses they created
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('created_by', profile.id);
+        
+        if (error) throw error;
+        setCourses(data ?? []);
+      } else if (profile.role === 'faculty') {
+        // Faculty sees only courses enrolled in
+        // Step 1: Get course IDs from enrollment table
+        const { data: enrollments, error: enrollError } = await supabase
+          .from('course_faculty_enrollments')
+          .select('course_id')
+          .eq('faculty_id', profile.id);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Your existing submit logic
-    toast.success(course ? 'Course updated successfully!' : 'Course added successfully!');
-    onClose();
-  };
+        if (enrollError) throw enrollError;
 
-  if (!isOpen) return null;
+        if (!enrollments || enrollments.length === 0) {
+          setCourses([]);
+          setLoading(false);
+          return;
+        }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-      
-      <div className="relative w-full max-w-md mx-4 snake-border-modal">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-              {course ? 'Edit Course' : 'Add New Course'}
-            </h2>
-            <button onClick={onClose} className="p-2 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        // Step 2: Fetch courses matching those IDs
+        const courseIds = enrollments.map((e) => e.course_id);
+        const { data: coursesData, error: coursesError } = await supabase
+          .from('courses')
+          .select('*')
+          .in('id', courseIds);
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
-              <input
-                type="text"
-                placeholder="Course Name"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
-              <input
-                type="text"
-                placeholder="Course Code"
-                value={formData.code}
-                onChange={(e) => setFormData({...formData, code: e.target.value})}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
-              <input
-                type="text"
-                placeholder="Instructor Name"
-                value={formData.instructor}
-                onChange={(e) => setFormData({...formData, instructor: e.target.value})}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
-              <input
-                type="number"
-                placeholder="Credits"
-                value={formData.credits}
-                onChange={(e) => setFormData({...formData, credits: e.target.value})}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none"
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-500 dark:text-slate-500" />
-              <textarea
-                placeholder="Course Description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none resize-none"
-                rows={3}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 focus:outline-none transition-all mt-6"
-            >
-              {course ? 'Update Course' : 'Add Course'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CoursesPage = () => {
-  const [courses, setCourses] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    // Your existing fetch logic
-    setCourses([
-      {
-        id: 1,
-        name: 'Advanced React Development',
-        code: 'CS301',
-        instructor: 'Dr. Smith',
-        credits: 3,
-        students: 45,
-        description: 'Learn advanced React patterns and best practices'
-      },
-      {
-        id: 2,
-        name: 'Database Systems',
-        code: 'CS205',
-        instructor: 'Prof. Johnson',
-        credits: 4,
-        students: 38,
-        description: 'Comprehensive database design and management'
+        if (coursesError) throw coursesError;
+        setCourses(coursesData ?? []);
+      } else {
+        // Other roles see no courses
+        setCourses([]);
       }
-    ]);
+    } catch (error) {
+      toast.error(error.message || 'Failed to fetch courses');
+      setCourses([]);
+    }
+    setLoading(false);
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile) {
+      fetchCourses();
+    }
+  }, [fetchCourses, profile]);
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleAddCourse = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('courses').insert([
+        {
+          name: formData.name,
+          code: formData.code,
+          description: formData.description,
+          department: profile.department,
+          college_id: profile.college_id,
+          created_by: profile.id,
+        },
+      ]);
+      if (error) throw error;
+      toast.success('Course added successfully!');
+      setFormData({ name: '', code: '', description: '' });
+      setShowAddForm(false);
+      fetchCourses();
+    } catch (error) {
+      toast.error(error.message || 'Failed to add course');
+    }
     setLoading(false);
   };
 
-  const handleEdit = (course) => {
-    setEditingCourse(course);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      setCourses(courses.filter(course => course.id !== courseId));
-      toast.success('Course deleted successfully!');
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('courses').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Course deleted');
+      fetchCourses();
+    } catch {
+      toast.error('Failed to delete course');
     }
+    setLoading(false);
   };
 
-  const filteredCourses = courses.filter(course =>
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCourses = courses.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.code.toLowerCase().includes(search.toLowerCase()) ||
+      (c.description && c.description.toLowerCase().includes(search.toLowerCase()))
   );
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="glass-card p-6 rounded-2xl">
-          <div className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-3 text-gray-600 dark:text-slate-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-500 border-t-transparent"></div>
-              <span>Loading courses...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!profile) return <div className="text-center py-10">Loading profile...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="glass-card p-6 rounded-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <BookOpen className="h-8 w-8 text-purple-400" />
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                My Courses
-              </h1>
-            </div>
-            <p className="text-gray-600 dark:text-slate-400">
-              Manage your courses and track student enrollment
-            </p>
-          </div>
+    <div className="max-w-5xl mx-auto p-6 space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Manage Courses</h1>
+        {profile.role === 'hod' && (
           <button
-            onClick={() => {
-              setEditingCourse(null);
-              setIsModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            onClick={() => setShowAddForm((s) => !s)}
           >
-            <Plus className="h-5 w-5" />
-            Add New Course
+            {showAddForm ? 'Cancel' : 'Add Course'}
           </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="glass-card p-4 rounded-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search courses by name, code, or instructor..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="glow-input w-full pl-10 pr-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-500 rounded-lg focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Courses Grid */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {filteredCourses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <BookOpen className="h-16 w-16 text-gray-400 dark:text-slate-600 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 dark:text-slate-300 mb-2">
-              {searchTerm ? 'No Courses Found' : 'No Courses Yet'}
-            </h3>
-            <p className="text-gray-500 dark:text-slate-500 mb-6">
-              {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first course'}
-            </p>
-            {!searchTerm && (
-              <button
-                onClick={() => {
-                  setEditingCourse(null);
-                  setIsModalOpen(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
-              >
-                <Plus className="h-5 w-5" />
-                Add First Course
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {filteredCourses.map((course) => (
-              <div key={course.id} className="bg-white dark:bg-slate-800/50 rounded-xl p-6 border border-gray-200 dark:border-slate-700/50 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                      {course.name}
-                    </h3>
-                    <p className="text-purple-600 dark:text-purple-400 font-medium">
-                      {course.code}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(course)}
-                      className="p-2 text-blue-500 hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(course.id)}
-                      className="p-2 text-red-500 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 dark:text-slate-400 text-sm mb-4">
-                  {course.description}
-                </p>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-slate-400">Instructor:</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{course.instructor}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-slate-400">Credits:</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{course.credits}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-slate-400">Students:</span>
-                    <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
-                      <Users className="h-3 w-3" />
-                      {course.students}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         )}
       </div>
 
-      <AddEditCourseModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingCourse(null);
-        }}
-        course={editingCourse}
+      {showAddForm && profile.role === 'hod' && (
+        <form className="bg-white p-4 rounded shadow space-y-4" onSubmit={handleAddCourse}>
+          <div>
+            <label className="block font-semibold mb-1">Course Name</label>
+            <input
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="input-field w-full"
+              placeholder="e.g. Data Structures"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-1">Course Code</label>
+            <input
+              name="code"
+              required
+              value={formData.code}
+              onChange={handleChange}
+              className="input-field w-full"
+              placeholder="e.g. CS101"
+            />
+          </div>
+          <div>
+            <label className="block font-semibold mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="input-field w-full"
+              placeholder="Brief course description"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? 'Adding...' : 'Add Course'}
+          </button>
+        </form>
+      )}
+
+      <input
+        type="search"
+        placeholder="Search courses..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="input-field max-w-md mb-4"
       />
+
+      <div className="overflow-auto rounded shadow border border-gray-300">
+        <table className="min-w-full text-left divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-2 px-4 font-semibold">Name</th>
+              <th className="py-2 px-4 font-semibold">Code</th>
+              <th className="py-2 px-4 font-semibold">Description</th>
+              {profile.role === 'hod' && (
+                <th className="py-2 px-4 font-semibold">Actions</th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCourses.length === 0 && (
+              <tr>
+                <td
+                  colSpan={profile.role === 'hod' ? 4 : 3}
+                  className="py-6 text-center text-gray-500"
+                >
+                  No courses found.
+                </td>
+              </tr>
+            )}
+            {filteredCourses.map((course) => (
+              <tr key={course.id} className="hover:bg-gray-50">
+                <td className="py-2 px-4">{course.name}</td>
+                <td className="py-2 px-4">{course.code}</td>
+                <td className="py-2 px-4">{course.description}</td>
+                {profile.role === 'hod' && (
+                  <td className="py-2 px-4">
+                    <button
+                      onClick={() => handleDelete(course.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {loading && <div className="text-center p-4 font-semibold">Loading...</div>}
+      </div>
     </div>
   );
 };
 
-export default CoursesPage;
+export default ManageCoursesPage;
