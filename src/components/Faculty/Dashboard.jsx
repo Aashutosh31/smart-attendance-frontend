@@ -15,7 +15,7 @@ import {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const logoutAction = useAuthStore((state) => state.logout);
+  const {signOut,profile} = useAuthStore();
   const [darkMode, setDarkMode] = React.useState(
     () => localStorage.getItem("theme") === "dark"
   );
@@ -31,10 +31,10 @@ const Dashboard = () => {
     }
   }, [darkMode]);
 
-  const handleLogout = () => {
-    logoutAction();
+  const handleSignOut = () => {
+    signOut();
     navigate('/login');
-  };
+  }
 
   const navItems = [
     { to: "overview", name: "Overview", icon: Home },
@@ -81,7 +81,7 @@ const Dashboard = () => {
         {/* Logout */}
         <div className="pt-6 border-t border-gray-200 dark:border-slate-800/50">
           <button
-            onClick={handleLogout}
+            onClick={handleSignOut}
             className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors"
           >
             <LogOut className="h-5 w-5" />
