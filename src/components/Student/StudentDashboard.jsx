@@ -37,7 +37,11 @@ const StudentDashboard = () => {
     () => localStorage.getItem("theme") === "dark"
   );
   const navigate = useNavigate();
-  const { logout: logoutAction, token, user } = useAuthStore();
+  const { signOut, profile } = useAuthStore();
+  const user = profile;
+
+  // Get token from auth store if available
+  const token = useAuthStore.getState().accessToken || useAuthStore.getState().token;
 
   // Handle theme toggle
   useEffect(() => {
@@ -88,9 +92,10 @@ const StudentDashboard = () => {
             streak,
             gpa: 3.8 // Mock GPA - replace with real data
           });
+        } else {
+          throw new Error("Failed to fetch attendance");
         }
       } catch (error) {
-        console.error("Failed to fetch attendance", error);
         // Mock data for demo
         const mockData = [
           { id: 1, date: '2024-01-20', courseName: 'Advanced React', status: 'present' },
@@ -115,39 +120,34 @@ const StudentDashboard = () => {
     };
 
     fetchAttendance();
-  }, [token]);
+    // eslint-disable-next-line
+  }, []);
 
-  const handleLogout = () => {
-    logoutAction();
+  const handleSignOut = () => {
+    signOut();
     navigate('/login');
   };
 
   // Premium stat card component
   const PremiumStatCard = ({ title, value, subtitle, icon: Icon, gradient, percentage, trend }) => (
     <div className="group relative">
-      {/* Floating glow effect */}
       <div className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-pulse`}></div>
-      
-      {/* Main card */}
       <div className="relative glass-card p-6 rounded-2xl hover:scale-105 transition-all duration-300 border border-white/10 dark:border-slate-700/30">
-        {/* Background pattern */}
         <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
           <Icon className="w-full h-full text-current" />
         </div>
-        
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}>
               <Icon className="h-6 w-6 text-white" />
             </div>
-            {trend && (
+            {trend !== undefined && (
               <div className={`flex items-center gap-1 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
                 <TrendingUp className={`h-4 w-4 ${trend < 0 ? 'rotate-180' : ''}`} />
                 <span className="text-xs font-medium">{Math.abs(trend)}%</span>
               </div>
             )}
           </div>
-          
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-600 dark:text-slate-400">{title}</h3>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
@@ -155,8 +155,6 @@ const StudentDashboard = () => {
               <p className="text-xs text-gray-500 dark:text-slate-500">{subtitle}</p>
             )}
           </div>
-          
-          {/* Progress bar */}
           {percentage !== undefined && (
             <div className="mt-4">
               <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
@@ -241,7 +239,6 @@ const StudentDashboard = () => {
                 </h1>
               </div>
             </div>
-
             {/* Right side */}
             <div className="flex items-center gap-4">
               {/* Theme Toggle */}
@@ -251,7 +248,6 @@ const StudentDashboard = () => {
               >
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
-
               {/* User Menu */}
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
@@ -261,10 +257,9 @@ const StudentDashboard = () => {
                   {user?.full_name || 'Student'}
                 </span>
               </div>
-
               {/* Logout */}
               <button
-                onClick={handleLogout}
+                onClick={handleSignOut}
                 className="p-2 text-red-500 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                 title="Logout"
               >
@@ -274,7 +269,6 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Welcome Section */}
@@ -286,7 +280,6 @@ const StudentDashboard = () => {
             Here's your academic journey at a glance
           </p>
         </div>
-
         {/* Premium Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <PremiumStatCard
@@ -298,7 +291,6 @@ const StudentDashboard = () => {
             percentage={stats.attendancePercentage}
             trend={5}
           />
-          
           <PremiumStatCard
             title="Current Streak"
             value={`${stats.streak} days`}
@@ -307,7 +299,6 @@ const StudentDashboard = () => {
             gradient="from-yellow-500 to-orange-600"
             trend={stats.streak > 0 ? 10 : -5}
           />
-          
           <PremiumStatCard
             title="GPA"
             value={stats.gpa.toFixed(1)}
@@ -317,7 +308,6 @@ const StudentDashboard = () => {
             percentage={(stats.gpa / 10.0) * 100}
             trend={2}
           />
-          
           <PremiumStatCard
             title="Total Classes"
             value={stats.totalClasses}
@@ -327,7 +317,6 @@ const StudentDashboard = () => {
             trend={15}
           />
         </div>
-
         {/* Quick Overview Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Attendance Overview */}
@@ -340,7 +329,6 @@ const StudentDashboard = () => {
                   Last 5 records
                 </div>
               </div>
-              
               <div className="space-y-3">
                 {attendance.slice(0, 5).map((record) => (
                   <div key={record.id} className="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/30 rounded-xl hover:bg-white/70 dark:hover:bg-slate-800/50 transition-colors">
@@ -376,7 +364,6 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                 ))}
-                
                 {attendance.length === 0 && (
                   <div className="text-center py-12 text-gray-500 dark:text-slate-500">
                     <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -386,11 +373,9 @@ const StudentDashboard = () => {
               </div>
             </div>
           </div>
-
           {/* Achievements */}
           <div className="glass-card p-6 rounded-2xl border border-white/10 dark:border-slate-700/30">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Achievements</h3>
-            
             <div className="space-y-4">
               <AchievementBadge
                 icon={Trophy}
@@ -398,21 +383,18 @@ const StudentDashboard = () => {
                 description="100% attendance for 7 days"
                 unlocked={stats.streak >= 7}
               />
-              
               <AchievementBadge
                 icon={Star}
                 title="High Achiever"
                 description="80%+ attendance rate"
                 unlocked={stats.attendancePercentage >= 80}
               />
-              
               <AchievementBadge
                 icon={Zap}
                 title="Consistency King"
                 description="5 day streak"
                 unlocked={stats.streak >= 5}
               />
-              
               <AchievementBadge
                 icon={Target}
                 title="Sharp Shooter"
@@ -422,7 +404,6 @@ const StudentDashboard = () => {
             </div>
           </div>
         </div>
-
         {/* Performance Overview */}
         <div className="glass-card p-6 rounded-2xl border border-white/10 dark:border-slate-700/30">
           <div className="flex items-center justify-between mb-6">
@@ -432,7 +413,6 @@ const StudentDashboard = () => {
               This semester
             </div>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
               <div className="inline-flex p-3 bg-green-500 text-white rounded-xl mb-3">
@@ -441,7 +421,6 @@ const StudentDashboard = () => {
               <h4 className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.presentCount}</h4>
               <p className="text-green-600 dark:text-green-400 font-medium">Classes Attended</p>
             </div>
-            
             <div className="text-center p-6 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl">
               <div className="inline-flex p-3 bg-red-500 text-white rounded-xl mb-3">
                 <XCircle className="h-6 w-6" />
@@ -449,7 +428,6 @@ const StudentDashboard = () => {
               <h4 className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.absentCount}</h4>
               <p className="text-red-600 dark:text-red-400 font-medium">Classes Missed</p>
             </div>
-            
             <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
               <div className="inline-flex p-3 bg-blue-500 text-white rounded-xl mb-3">
                 <Clock className="h-6 w-6" />
@@ -460,7 +438,6 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
-
       {/* Floating action elements */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col gap-3">
