@@ -1,13 +1,12 @@
-// UI-only restyle of existing LoginPage.jsx; no logic, routes, or handlers changed [attached_file:19]
-
 // File Path: src/components/Auth/LoginPage.jsx
+// Change: Removed role selection; added role info in side panel. No route or auth logic changed.
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { KeyRound, Mail, ShieldCheck } from 'lucide-react';
+import { KeyRound, Mail } from 'lucide-react';
 import { useAuthStore } from '../../store/AuthStore';
 
-// Google Icon SVG (visual only)
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 533.5 544.3" aria-hidden="true">
     <path fill="#4285F4" d="M533.5 278.4c0-17.4-1.6-34.1-4.7-50.4H272v95.4h147c-6.4 34.6-25.7 63.9-55 83.4l89 69.1c52.1-48 80.5-118.7 80.5-197.5z"/>
@@ -18,20 +17,18 @@ const GoogleIcon = () => (
 );
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '', role: '' });
+  // Removed role from state
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
-  const { signIn, loading } = useAuthStore(); // unchanged
+  const { signIn, loading } = useAuthStore();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!formData.role) {
-      return toast.error('Please select your role to continue.');
-    }
-    const { error } = await signIn(formData.email, formData.password, formData.role);
+    const { error } = await signIn(formData.email, formData.password, undefined); // keep signature compatible
     if (error) {
       toast.error(error.message);
     } else {
@@ -48,17 +45,14 @@ const LoginPage = () => {
       <div className="pointer-events-none absolute -bottom-28 -right-28 w-80 h-80 rounded-full blur-[100px] opacity-30"
            style={{ background: 'radial-gradient(60% 60% at 50% 50%, #22d3ee 0%, rgba(34,211,238,0) 70%)' }} />
 
-      {/* Card container */}
       <div className="relative z-10 w-full max-w-4xl">
         <div className="relative rounded-2xl border border-pink-500/25 bg-slate-900/70 backdrop-blur-xl shadow-[0_0_40px_rgba(236,72,153,0.25)]">
-          {/* Orange diagonal accent layer (visual only) */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: 'linear-gradient(135deg, rgba(255,115,0,0.2) 0%, rgba(255,65,108,0.15) 35%, rgba(0,0,0,0) 36%)'
             }}
           />
-          {/* Grid split: left form, right welcome */}
           <div className="relative grid md:grid-cols-5">
             {/* Left: Login form */}
             <div className="md:col-span-3 p-8 md:p-10 animation-slide-in-left">
@@ -94,24 +88,6 @@ const LoginPage = () => {
                   />
                 </div>
 
-                <div className="relative">
-                  <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-fuchsia-400" />
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3.5 rounded-lg bg-black/70 text-fuchsia-100 border border-fuchsia-600/30 focus:outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/30 transition appearance-none"
-                  >
-                    <option value="" disabled className="bg-black/90">Different Roles...</option>
-                    <option value="admin" className="bg-black/90">Admin</option>
-                    <option value="hod" className="bg-black/90">HOD</option>
-                    <option value="faculty" className="bg-black/90">Faculty</option>
-                    <option value="coordinator" className="bg-black/90">Program Coordinator</option>
-                    <option value="student" className="bg-black/90">Student</option>
-                  </select>
-                </div>
-
                 <button
                   type="submit"
                   disabled={loading}
@@ -139,7 +115,7 @@ const LoginPage = () => {
               </p>
             </div>
 
-            {/* Right: Welcome panel (visual only) */}
+            {/* Right: Role info panel */}
             <aside className="hidden md:flex md:col-span-2 relative items-center justify-center px-6 py-10 animation-slide-in-right">
               <div
                 className="absolute inset-0 rounded-r-2xl"
@@ -149,20 +125,24 @@ const LoginPage = () => {
                   opacity: 0.22
                 }}
               />
-              <div className="relative max-w-xs text-right">
-                <h2 className="text-3xl font-extrabold text-white drop-shadow-[0_0_14px_rgba(250,100,100,0.55)]">
-                  WELCOME<br/>BACK!
+              <div className="relative max-w-xs text-right space-y-4">
+                <h2 className="text-2xl font-extrabold text-white drop-shadow-[0_0_14px_rgba(250,100,100,0.55)]">
+                  Roles Overview
                 </h2>
-                <p className="mt-3 text-slate-300 text-sm leading-relaxed">
-                  We are happy to have you with us again. If anything is needed, support is here to help.
-                </p>
+                <div className="text-slate-300 text-sm leading-relaxed space-y-3">
+                  <p><span className="text-pink-300 font-semibold">Admin:</span> Manages college, departments, approvals, system-wide settings.</p>
+                  <p><span className="text-pink-300 font-semibold">HOD:</span> Oversees department, faculty assignments, and course mapping.</p>
+                  <p><span className="text-pink-300 font-semibold">Faculty:</span> Takes attendance, manages classes and reports.</p>
+                  <p><span className="text-pink-300 font-semibold">Coordinator:</span> Handles batches, schedules, and section operations.</p>
+                  <p><span className="text-pink-300 font-semibold">Student:</span> Views attendance and notifications.</p>
+                </div>
               </div>
             </aside>
           </div>
         </div>
       </div>
 
-      {/* Local CSS for subtle entrance animations (no state) */}
+      {/* Local CSS for subtle entrance animations */}
       <style>{`
         @keyframes slideInLeft { 
           0% { transform: translateX(-28px); opacity: 0; filter: blur(6px); }
