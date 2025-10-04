@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   
   // THE CRITICAL LOGIC:
   // If the user is logged in BUT needs to enroll their face...
-  if (session && !isFaceEnrolled && profile?.role !== 'program_coordinator') {
+  if (session && !isFaceEnrolled) {
     // ...only redirect them IF they are NOT already on the enrollment page.
     if (location.pathname !== "/enroll-face") {
       return <Navigate to="/enroll-face" />;

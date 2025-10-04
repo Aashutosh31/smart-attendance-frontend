@@ -123,7 +123,7 @@ function App() {
           <Route path="/student/verify" element={<ProtectedRoute allowedRoles={['student']}><StudentVerificationPage /></ProtectedRoute>} />
           
           {/* 5. Program Coordinator Routes */}
-          <Route path="/coordinator" element={<ProtectedRoute allowedRoles={['program_coordinator']}><ProgramCoordinatorDashboard /></ProtectedRoute>}>
+          <Route path="/coordinator" element={<ProtectedRoute allowedRoles={['coordinator']}><ProgramCoordinatorDashboard /></ProtectedRoute>}>
             <Route index element={<AddStudentPage />} />
             <Route path="add-student" element={<AddStudentPage />} />
             <Route path="manage-courses" element={<ManageCoursesPage />} />

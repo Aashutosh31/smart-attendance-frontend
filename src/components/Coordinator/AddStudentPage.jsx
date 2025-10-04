@@ -105,7 +105,9 @@ const AddStudentPage = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-10">
       <div>
-        <h1 className="text-3xl font-bold mb-6">Add Student</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent my-4">
+            Add Student
+          </h1>
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow-md space-y-6"
@@ -223,7 +225,9 @@ const AddStudentPage = () => {
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Students List</h2>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent my-2">
+            Students list
+          </h1>
         <table className="min-w-full bg-white rounded shadow divide-y divide-gray-300">
           <thead className="bg-indigo-100">
             <tr>
