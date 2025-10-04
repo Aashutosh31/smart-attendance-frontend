@@ -1,36 +1,39 @@
-// File Path: src/components/Auth/ProtectedRoute.jsx
-import { Navigate } from "react-router-dom";
-import { useAuthStore } from "../../store/AuthStore"; // Corrected Import
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../../store/AuthStore";
 import PropTypes from "prop-types";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { loading, session, profile } = useAuthStore();
+  const { loading, session, profile, isFaceEnrolled } = useAuthStore();
+  const location = useLocation(); // Get the current URL location
 
-  // While the session is being initialized, show a loading indicator.
-  // This is crucial to prevent redirecting before the auth state is known.
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner component
+    return <div>Loading...</div>; // Or a more stylish spinner component
   }
 
-  // If not loading and there's no session, redirect to the login page.
+  // If the user is not logged in at all, send them to the login page.
   if (!session) {
     return <Navigate to="/login" />;
   }
   
-  // If there is a session, but no specific roles are required, render the children.
-  // This is used for the main "/" route that leads to RoleBasedRedirect.
-  if (!allowedRoles) {
-    return children;
+  // THE CRITICAL LOGIC:
+  // If the user is logged in BUT needs to enroll their face...
+  if (session && !isFaceEnrolled && profile?.role !== 'program_coordinator') {
+    // ...only redirect them IF they are NOT already on the enrollment page.
+    if (location.pathname !== "/enroll-face") {
+      return <Navigate to="/enroll-face" />;
+    }
   }
 
-  // If roles are specified, check if the user's role is included.
-  const userRole = profile?.role;
-  if (allowedRoles.includes(userRole)) {
-    return children;
+  // If the route has specific role requirements, check them.
+  if (allowedRoles) {
+    const userRole = profile?.role;
+    if (!allowedRoles.includes(userRole)) {
+      return <Navigate to="/unauthorized" />;
+    }
   }
 
-  // If the user's role is not allowed, redirect to an unauthorized page.
-  return <Navigate to="/unauthorized" />;
+  // If all checks pass, render the component the user asked for.
+  return children;
 };
 
 ProtectedRoute.propTypes = {

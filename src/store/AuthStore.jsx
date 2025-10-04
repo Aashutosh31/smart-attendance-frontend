@@ -7,45 +7,47 @@ export const useAuthStore = create((set, get) => ({
   profile: null,
   loading: true,
   error: null,
+  isFaceEnrolled: false,
 
-  initializeSession: async () => {
+  fetchFaceEnrollmentStatus: async () => {
+    const session = get().session;
+    if (!session?.access_token) return;
+
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      if (session) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (profileError) throw profileError;
-        set({ session, user: session.user, profile });
-      } else {
-        set({ session: null, user: null, profile: null });
+      const response = await fetch('http://localhost:8000/api/auth/status', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+      if (response.ok) {
+        const { isFaceEnrolled } = await response.json();
+        set({ isFaceEnrolled });
       }
     } catch (error) {
-      set({ error: error.message });
-      console.error("Error initializing session:", error.message);
-    } finally {
-      set({ loading: false });
+      console.error("Failed to fetch face enrollment status:", error);
     }
+  },
+
+  initializeSession: async () => {
+    set({ loading: true });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      set({ session, user: session.user, profile });
+      await get().fetchFaceEnrollmentStatus();
+    }
+    set({ loading: false });
   },
 
   signIn: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) throw authError;
-
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authData.user.id)
-        .single();
-      if (profileError) throw profileError;
-
-      set({ session: authData.session, user: authData.user, profile: profileData });
-      return { user: authData.user };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+      set({ session: data.session, user: data.user, profile });
+      await get().fetchFaceEnrollmentStatus();
+      return { user: data.user };
     } catch (error) {
       set({ error: error.message });
       return { error };
@@ -55,14 +57,13 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
-    try {
-      await supabase.auth.signOut();
-      set({ user: null, profile: null, session: null, error: null, loading: false });
-    } catch (error) {
-      set({ error: error.message, loading: false });
-    }
+    await supabase.auth.signOut();
+    set({ user: null, profile: null, session: null, error: null, isFaceEnrolled: false });
   },
+  
+  updateFaceEnrollmentStatus: (status) => {
+    set({ isFaceEnrolled: status });
+  }
 }));
 
-// Initialize on app start
 useAuthStore.getState().initializeSession();
