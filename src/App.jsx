@@ -111,7 +111,7 @@ function App() {
           
           {/* 3. Faculty Routes */}
           <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>}>
-            <Route index element={<DashboardOverview />} />
+            <Route path="overview" element={<DashboardOverview />} />
             <Route path="courses" element={<CoursesPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
