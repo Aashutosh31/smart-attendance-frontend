@@ -1,33 +1,11 @@
 import React, { useState } from "react";
 import { Building2, KeyRound, Mail, User, Shield } from "lucide-react";
- import { supabase } from "../../supabaseClient"; // Assuming supabase client is configured
- import { ToastContainer } from "react-toastify";
- import 'react-toastify/dist/ReactToastify.css';
-
-// Mock functions for demonstration since the original dependencies are not available here.
-const navigate = (path) => console.log(`Navigating to ${path}`);
-const toast = {
-    error: (msg) => console.error(msg),
-    success: (msg) => console.log(msg),
-    info: (msg) => console.log(msg),
-};
-const Link = ({ to, children, className }) => <a href={to} className={className}>{children}</a>;
-
+import { supabase } from "../../supabaseClient";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate, Link } from "react-router-dom";
 
 const CollegeRegistrationPage = () => {
-     <ToastContainer
-        position="top-right"
-        autoClose={4000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
-
   const [formData, setFormData] = useState({
     collegeName: "",
     collegeId: "",
@@ -36,21 +14,21 @@ const CollegeRegistrationPage = () => {
     password: "",
     confirmPassword: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
-  // const navigate = useNavigate(); // Original hook
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       return toast.error("Passwords do not match!");
     }
-    
+
     if (formData.password.length < 6) {
       return toast.error("Password must be at least 6 characters long!");
     }
@@ -84,6 +62,7 @@ const CollegeRegistrationPage = () => {
 
       if (collegeError) throw collegeError;
 
+      // This assumes you have a 'profiles' table that gets a row when a user signs up (e.g., via a trigger).
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -95,13 +74,15 @@ const CollegeRegistrationPage = () => {
       if (profileError) throw profileError;
 
       toast.success('College and admin account created successfully!');
-      toast.info('Please check your email to verify your account.');
-      
-      navigate('/login');
-      
+
+      // Navigate to the login page after a short delay to allow the user to see the toast.
+      setTimeout(() => {
+        navigate('/login');
+      }, 4000);
+
     } catch (error) {
       console.error('Error creating admin:', error);
-      
+
       if (error.code === '23505') {
         toast.error('College ID already exists. Please choose a different one.');
       } else {
@@ -114,6 +95,18 @@ const CollegeRegistrationPage = () => {
 
   return (
     <>
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -181,7 +174,7 @@ const CollegeRegistrationPage = () => {
                     Empowering colleges with the future of attendance tracking.
                 </p>
              </div>
-             
+
              {/* Animated Data Nexus SVG */}
              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-64 h-64 md:w-80 md:h-80 mt-8 svg-glow" style={{ animation: 'fadeIn 1.2s ease-out forwards' }}>
                 <defs>
@@ -231,13 +224,13 @@ const CollegeRegistrationPage = () => {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
               <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                 {[
-                  { id: "collegeName", icon: Building2, placeholder: "College Name", type: "text" },
-                  { id: "collegeId", icon: Shield, placeholder: "Unique College ID", type: "text" },
-                  { id: "fullName", icon: User, placeholder: "Admin Full Name", type: "text" },
-                  { id: "email", icon: Mail, placeholder: "Admin Email", type: "email" },
-                  { id: "password", icon: KeyRound, placeholder: "Password", type: "password" },
-                  { id: "confirmPassword", icon: KeyRound, placeholder: "Confirm Password", type: "password" },
-                ].map(({ id, icon: Icon, placeholder, type }, index) => (
+                  { id: "collegeName", name: "collegeName", icon: Building2, placeholder: "College Name", type: "text" },
+                  { id: "collegeId", name: "collegeId", icon: Shield, placeholder: "Unique College ID", type: "text" },
+                  { id: "fullName", name: "fullName", icon: User, placeholder: "Admin Full Name", type: "text" },
+                  { id: "email", name: "email", icon: Mail, placeholder: "Admin Email", type: "email" },
+                  { id: "password", name: "password", icon: KeyRound, placeholder: "Password", type: "password" },
+                  { id: "confirmPassword", name: "confirmPassword", icon: KeyRound, placeholder: "Confirm Password", type: "password" },
+                ].map(({ id, name, icon: Icon, placeholder, type }, index) => (
                   <div key={id} className="form-element" style={{animationDelay: `${0.4 + index * 0.1}s`}}>
                     <label htmlFor={id} className="sr-only">{placeholder}</label>
                     <div className="relative group">
@@ -246,7 +239,7 @@ const CollegeRegistrationPage = () => {
                        </div>
                        <input
                          id={id}
-                         name={id}
+                         name={name}
                          type={type}
                          required
                          value={formData[id]}
