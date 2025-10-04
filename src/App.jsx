@@ -87,7 +87,7 @@ function App() {
 
           {/* 1. Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}>
-            <Route index element={<ViewStudents />} />
+            <Route path="view-students" element={<ViewStudents />} />
             <Route path="manage-hods" element={<ManageHods />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="analytics" element={<AdminAnalyticsPage />} />
@@ -97,12 +97,13 @@ function App() {
           
           {/* 2. HOD Routes */}
           <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
-            <Route index element={<HodOverviewPage />} />
-            <Route path="manage-faculty" element={<ManageFaculty />} />
-            <Route path="manage-coordinators" element={<ManageCoordinators />} />
-            <Route path="manage-courses" element={<ManageCoursesPage />} />
+            <Route path="overview" element={<HodOverviewPage />} />
+            <Route path="faculty" element={<ManageFaculty />} />
+            <Route path="coordinators" element={<ManageCoordinators />} />
+            <Route path="courses" element={<ManageCoursesPage />} />
             <Route path="student-reports" element={<StudentsReportPage />} />
-            <Route path="faculty-reports" element={<FacultyReportsPage />} />
+             <Route path="students" element={<ViewStudents />} />
+            <Route path="reports" element={<FacultyReportsPage />} />
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
