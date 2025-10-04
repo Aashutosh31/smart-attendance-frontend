@@ -14,7 +14,7 @@ export const useAuthStore = create((set, get) => ({
     if (!session?.access_token) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/status', {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/auth/status`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
