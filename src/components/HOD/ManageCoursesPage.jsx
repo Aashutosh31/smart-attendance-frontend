@@ -32,7 +32,7 @@ const ManageCoursesPage = () => {
   };
 
   // --- THIS IS THE CRITICAL FIX ---
-  // Fetches the list of real faculty members from the backend
+  // Replaces the placeholder and fetches the list of real faculty from your backend
   const fetchFaculty = async () => {
     if (!token) return;
     setIsFacultyLoading(true);
@@ -42,7 +42,7 @@ const ManageCoursesPage = () => {
       });
       if (!response.ok) throw new Error('Failed to load faculty list.');
       const data = await response.json();
-      setFacultyList(data);
+      setFacultyList(data); // The state is updated with REAL data
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -134,6 +134,7 @@ const ManageCoursesPage = () => {
             className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition disabled:opacity-50"
           >
             <option value="">{isFacultyLoading ? 'Loading Faculty...' : 'Assign Faculty'}</option>
+            {/* This now maps over the REAL faculty data from your database */}
             {facultyList.map((faculty) => (
               <option key={faculty.id} value={faculty.id}>
                 {faculty.name}
