@@ -8,6 +8,7 @@ const ManageCoursesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newCourse, setNewCourse] = useState({ name: '', code: '', facultyId: '' });
   
+  // State for the real faculty data fetched from the backend
   const [facultyList, setFacultyList] = useState([]);
   const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
@@ -42,7 +43,7 @@ const ManageCoursesPage = () => {
         throw new Error('Failed to load faculty list from backend.');
       }
       const data = await response.json();
-      setFacultyList(data); // The state is updated with REAL data
+      setFacultyList(data); // The state is updated with REAL data from your database
     } catch (error) {
       toast.error(error.message);
     } finally {
