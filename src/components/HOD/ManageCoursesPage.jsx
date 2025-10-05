@@ -8,13 +8,12 @@ const ManageCoursesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newCourse, setNewCourse] = useState({ name: '', code: '', facultyId: '' });
   
-  // State for the real faculty data fetched from the backend
   const [facultyList, setFacultyList] = useState([]);
   const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
   const token = useAuthStore((state) => state.session?.access_token);
 
-  // Function to fetch all existing courses
+  // Function to fetch all existing courses from the backend
   const fetchCourses = async () => {
     if (!token) return;
     try {
@@ -31,26 +30,31 @@ const ManageCoursesPage = () => {
     }
   };
 
-  // --- THIS IS THE CRITICAL FIX ---
-  // Replaces the placeholder and fetches the list of real faculty from your backend
+  // Fetches the list of REAL faculty members from the backend
   const fetchFaculty = async () => {
     if (!token) return;
     setIsFacultyLoading(true);
+    console.log('--- Starting to fetch REAL faculty list ---'); // DEBUG LOG
     try {
       const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/users/role/faculty`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) throw new Error('Failed to load faculty list.');
+      console.log('API Response Status:', response.status); // DEBUG LOG
+      if (!response.ok) {
+        throw new Error('Failed to load faculty list from backend.');
+      }
       const data = await response.json();
+      console.log('--- Successfully fetched faculty data ---:', data); // DEBUG LOG
       setFacultyList(data); // The state is updated with REAL data
     } catch (error) {
+      console.error("Fetch Faculty Error:", error); // DEBUG LOG
       toast.error(error.message);
     } finally {
       setIsFacultyLoading(false);
     }
   };
 
-  // Fetch both courses and faculty when the component loads
+  // This useEffect hook is now clean and calls the correct functions
   useEffect(() => {
     fetchCourses();
     fetchFaculty();
@@ -62,7 +66,6 @@ const ManageCoursesPage = () => {
     setNewCourse({ ...newCourse, [name]: value });
   };
 
-  // Handles creating a new course with the selected real faculty ID
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     if (!newCourse.name || !newCourse.code || !newCourse.facultyId) {
@@ -75,12 +78,12 @@ const ManageCoursesPage = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newCourse), // Send the complete course object
+        body: JSON.stringify(newCourse),
       });
       if (!response.ok) throw new Error('Failed to create course.');
       toast.success('Course created successfully!');
-      setNewCourse({ name: '', code: '', facultyId: '' }); // Reset form
-      fetchCourses(); // Refresh the list of courses
+      setNewCourse({ name: '', code: '', facultyId: '' });
+      fetchCourses();
     } catch (error) {
       toast.error(error.message);
     }
@@ -95,7 +98,7 @@ const ManageCoursesPage = () => {
         });
         if (!response.ok) throw new Error('Failed to delete course.');
         toast.success('Course deleted successfully!');
-        fetchCourses(); // Refresh the list
+        fetchCourses();
       } catch (error) {
         toast.error(error.message);
       }
@@ -106,7 +109,6 @@ const ManageCoursesPage = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Manage Courses</h1>
       
-      {/* Create Course Form */}
       <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md mb-8 border border-slate-200 dark:border-slate-700">
         <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Add New Course</h2>
         <form onSubmit={handleCreateCourse} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
@@ -134,7 +136,6 @@ const ManageCoursesPage = () => {
             className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition disabled:opacity-50"
           >
             <option value="">{isFacultyLoading ? 'Loading Faculty...' : 'Assign Faculty'}</option>
-            {/* This now maps over the REAL faculty data from your database */}
             {facultyList.map((faculty) => (
               <option key={faculty.id} value={faculty.id}>
                 {faculty.name}
@@ -147,7 +148,6 @@ const ManageCoursesPage = () => {
         </form>
       </div>
 
-      {/* Existing Courses List */}
       <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
         <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Existing Courses</h2>
         {isLoading ? (
