@@ -13,14 +13,13 @@ const TableSkeleton = () => (
 const FacultyAttendancePage = () => {
   const [facultyAttendanceList, setFacultyAttendanceList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const token = useAuthStore((state) => state.token);
+  const token = useAuthStore((state) => state.session?.access_token);
 
   useEffect(() => {
     const fetchFacultyAttendance = async () => {
       setIsLoading(true);
       try {
-        // Backend team needs to create this endpoint for the HOD
-        const response = await fetch('import.meta.env.VITE_API_HOST/api/hod/faculty-attendance/today', {
+        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/faculty-attendance/today`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -37,7 +36,7 @@ const FacultyAttendancePage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800  dark:text-white">Faculty Attendance - Today</h2>
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Faculty Attendance - Today</h2>
         {/* You can add filters here later, e.g., a date picker */}
       </div>
 
@@ -70,13 +69,13 @@ const FacultyAttendancePage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                       <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${faculty.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {faculty.status === 'present' ? <CheckCircle className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
-                            {faculty.status}
-                        </span>
+                      <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${faculty.status === 'present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {faculty.status === 'present' ? <CheckCircle className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
+                        {faculty.status}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {faculty.checkInTime || 'N/A'}
+                      {faculty.checkInTime || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button className="text-gray-400 hover:text-gray-600"><MoreHorizontal /></button>

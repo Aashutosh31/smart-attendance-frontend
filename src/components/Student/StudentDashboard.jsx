@@ -1,28 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/AuthStore';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LogOut, 
-  BookOpen, 
-  CheckCircle, 
-  XCircle, 
-  Moon, 
+import FaceRecognitionModal from '../Shared/FaceRecognitionModal';
+import { toast } from 'react-toastify';
+import {
+  LogOut,
+  BookOpen,
+  CheckCircle,
+  XCircle,
+  Moon,
   Sun,
   TrendingUp,
-  Calendar,
   Award,
   Target,
   Clock,
   GraduationCap,
   BarChart3,
-  User,
   Star,
   Zap,
   Trophy,
-  Activity
+  Activity,
+  PlayCircle
 } from 'lucide-react';
 
 const StudentDashboard = () => {
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [isAttendanceModalOpen, setAttendanceModalOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -41,9 +45,8 @@ const StudentDashboard = () => {
   const user = profile;
 
   // Get token from auth store if available
-  const token = useAuthStore.getState().accessToken || useAuthStore.getState().token;
+  const token = useAuthStore.getState().session?.access_token || useAuthStore.getState().token;
 
-  // Handle theme toggle
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -57,23 +60,22 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        // Using the correct API endpoint
         const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/me/attendance`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setAttendance(data);
-          
+
           // Calculate stats
           const totalClasses = data.length;
           const presentCount = data.filter(record => record.status === 'present').length;
           const absentCount = totalClasses - presentCount;
           const attendancePercentage = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : 0;
-          
+
           // Calculate streak (consecutive present days)
           let streak = 0;
           for (let i = data.length - 1; i >= 0; i--) {
@@ -83,7 +85,7 @@ const StudentDashboard = () => {
               break;
             }
           }
-          
+
           setStats({
             totalClasses,
             presentCount,
@@ -104,7 +106,7 @@ const StudentDashboard = () => {
           { id: 4, date: '2024-01-17', courseName: 'Web Security', status: 'present' },
           { id: 5, date: '2024-01-16', courseName: 'Advanced React', status: 'present' },
         ];
-        
+
         setAttendance(mockData);
         setStats({
           totalClasses: 5,
@@ -119,9 +121,54 @@ const StudentDashboard = () => {
       }
     };
 
+    const fetchActiveSessions = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/me/active-sessions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setActiveSessions(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch active sessions:", error);
+      }
+    };
+
     fetchAttendance();
+    fetchActiveSessions();
     // eslint-disable-next-line
-  }, []);
+  }, [token]);
+
+  const handleMarkAttendanceClick = (session) => {
+    setSelectedSession(session);
+    setAttendanceModalOpen(true);
+  };
+
+  const handleAttendanceSuccess = async () => {
+    if (!selectedSession) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/sessions/${selectedSession._id}/mark-attendance`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success(data.message);
+        // Refresh active sessions
+        const updatedSessions = activeSessions.filter(s => s._id !== selectedSession._id);
+        setActiveSessions(updatedSessions);
+      } else {
+        toast.error(data.message || "Failed to mark attendance.");
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+    }
+  };
 
   const handleSignOut = () => {
     signOut();
@@ -158,7 +205,7 @@ const StudentDashboard = () => {
           {percentage !== undefined && (
             <div className="mt-4">
               <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
-                <div 
+                <div
                   className={`h-2 rounded-full bg-gradient-to-r ${gradient} transition-all duration-1000`}
                   style={{ width: `${percentage}%` }}
                 ></div>
@@ -173,27 +220,27 @@ const StudentDashboard = () => {
   // Achievement badge component
   const AchievementBadge = ({ icon: Icon, title, description, unlocked = false }) => (
     <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${
-      unlocked 
-        ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 shadow-lg' 
+      unlocked
+        ? 'border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 shadow-lg'
         : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50'
     }`}>
       <div className={`inline-flex p-2 rounded-lg ${
-        unlocked 
-          ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white' 
+        unlocked
+          ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
           : 'bg-gray-300 dark:bg-slate-700 text-gray-500 dark:text-slate-500'
       }`}>
         <Icon className="h-5 w-5" />
       </div>
       <h4 className={`text-sm font-semibold mt-2 ${
-        unlocked 
-          ? 'text-gray-900 dark:text-white' 
+        unlocked
+          ? 'text-gray-900 dark:text-white'
           : 'text-gray-500 dark:text-slate-500'
       }`}>
         {title}
       </h4>
       <p className={`text-xs mt-1 ${
-        unlocked 
-          ? 'text-gray-600 dark:text-slate-400' 
+        unlocked
+          ? 'text-gray-600 dark:text-slate-400'
           : 'text-gray-400 dark:text-slate-600'
       }`}>
         {description}
@@ -280,6 +327,30 @@ const StudentDashboard = () => {
             Here's your academic journey at a glance
           </p>
         </div>
+
+        {/* ---- NEW ACTIVE SESSIONS SECTION ---- */}
+        {activeSessions.length > 0 && (
+          <div className="glass-card p-6 rounded-2xl border border-white/10 dark:border-slate-700/30">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Active Attendance Sessions</h3>
+            <div className="space-y-3">
+              {activeSessions.map((session) => (
+                <div key={session._id} className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">{session.course.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">Code: {session.course.code}</p>
+                  </div>
+                  <button
+                    onClick={() => handleMarkAttendanceClick(session)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                  >
+                    <PlayCircle className="h-5 w-5" /> Mark My Attendance
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Premium Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <PremiumStatCard
@@ -334,8 +405,8 @@ const StudentDashboard = () => {
                   <div key={record.id} className="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/30 rounded-xl hover:bg-white/70 dark:hover:bg-slate-800/50 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded-lg ${
-                        record.status === 'present' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                        record.status === 'present'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                           : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                       }`}>
                         {record.status === 'present' ? (
@@ -450,6 +521,13 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
+      {/* ---- ADD THE MODAL ---- */}
+      <FaceRecognitionModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => setAttendanceModalOpen(false)}
+        onSuccess={handleAttendanceSuccess}
+        title="Student Attendance Verification"
+      />
     </div>
   );
 };
