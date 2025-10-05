@@ -32,8 +32,12 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-      set({ session, user: session.user, profile });
+      const { data: profile,error } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      if(error){
+        console.log("Error fetching profile:", error);
+      }else{
+        set({ session, user: session.user, profile });
+      }
       await get().fetchFaceEnrollmentStatus();
     }
     set({ loading: false });
