@@ -1,354 +1,180 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../supabaseClient';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
+import { Book, Plus, Trash2, Loader, Users } from 'lucide-react';
 
 const ManageCoursesPage = () => {
-  const { profile } = useAuthStore();
   const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newCourse, setNewCourse] = useState({ name: '', code: '', facultyId: '' });
+  
+  // State for the real faculty data fetched from the backend
   const [facultyList, setFacultyList] = useState([]);
-  const [enrolledFaculty, setEnrolledFaculty] = useState([]);
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    description: '',
-  });
+  const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
-  // Fetch courses depending on the user's role
-  const fetchCourses = useCallback(async () => {
-    setLoading(true);
+  const token = useAuthStore((state) => state.session?.access_token);
+
+  // Function to fetch all existing courses
+  const fetchCourses = async () => {
+    if (!token) return;
     try {
-      if (profile.role === 'hod') {
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('created_by', profile.id);
-        
-        if (error) throw error;
-        setCourses(data ?? []);
-      } else if (profile.role === 'faculty') {
-        const { data: enrollments, error: enrollError } = await supabase
-          .from('course_faculty_enrollments')
-          .select('course_id')
-          .eq('faculty_id', profile.id);
-
-        if (enrollError) throw enrollError;
-
-        if (!enrollments || enrollments.length === 0) {
-          setCourses([]);
-          setLoading(false);
-          return;
-        }
-
-        const courseIds = enrollments.map((e) => e.course_id);
-        const { data: coursesData, error: coursesError } = await supabase
-          .from('courses')
-          .select('*')
-          .in('id', courseIds);
-
-        if (coursesError) throw coursesError;
-        setCourses(coursesData ?? []);
-      } else {
-        setCourses([]);
-      }
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to load courses.');
+      const data = await response.json();
+      setCourses(data);
     } catch (error) {
-      toast.error(error.message || 'Failed to fetch courses');
-      setCourses([]);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setLoading(false);
-  }, [profile]);
+  };
 
+  // --- THIS IS THE CRITICAL FIX ---
+  // Fetches the list of real faculty members from the backend
+  const fetchFaculty = async () => {
+    if (!token) return;
+    setIsFacultyLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/users/role/faculty`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to load faculty list.');
+      const data = await response.json();
+      setFacultyList(data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsFacultyLoading(false);
+    }
+  };
+
+  // Fetch both courses and faculty when the component loads
   useEffect(() => {
-    if (profile) {
-      fetchCourses();
-    }
-  }, [fetchCourses, profile]);
-
-  // Fetch faculty from department
-  const fetchFaculty = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('faculty')
-        .select('*')
-        .eq('department', profile.department);
-      if (error) throw error;
-      setFacultyList(data || []);
-    } catch (error) {
-      toast.error('Failed to fetch faculty');
-    }
-  }, [profile]);
-
-  // Fetch enrolled faculty for selected course
-  const fetchEnrolledFaculty = useCallback(async (courseId) => {
-    try {
-      const { data, error } = await supabase
-        .from('course_faculty_enrollments')
-        .select('faculty_id')
-        .eq('course_id', courseId);
-      if (error) throw error;
-      setEnrolledFaculty(data?.map(e => e.faculty_id) || []);
-    } catch (error) {
-      toast.error('Failed to fetch enrollments');
-    }
-  }, []);
-
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleAddCourse = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { error } = await supabase.from('courses').insert([
-        {
-          name: formData.name,
-          code: formData.code,
-          description: formData.description,
-          department: profile.department,
-          college_id: profile.college_id,
-          created_by: profile.id,
-        },
-      ]);
-      if (error) throw error;
-      toast.success('Course added successfully!');
-      setFormData({ name: '', code: '', description: '' });
-      setShowAddForm(false);
-      fetchCourses();
-    } catch (error) {
-      toast.error(error.message || 'Failed to add course');
-    }
-    setLoading(false);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this course?')) return;
-    setLoading(true);
-    try {
-      const { error } = await supabase.from('courses').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Course deleted');
-      fetchCourses();
-    } catch {
-      toast.error('Failed to delete course');
-    }
-    setLoading(false);
-  };
-
-  const handleEnrollClick = (course) => {
-    setSelectedCourse(course);
-    setShowEnrollModal(true);
+    fetchCourses();
     fetchFaculty();
-    fetchEnrolledFaculty(course.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewCourse({ ...newCourse, [name]: value });
   };
 
-  const handleEnrollToggle = async (facultyId) => {
+  // Handles creating a new course with the selected real faculty ID
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    if (!newCourse.name || !newCourse.code || !newCourse.facultyId) {
+      return toast.error('Please fill all fields, including selecting a faculty.');
+    }
     try {
-      const isEnrolled = enrolledFaculty.includes(facultyId);
-      
-      if (isEnrolled) {
-        // Unenroll
-        const { error } = await supabase
-          .from('course_faculty_enrollments')
-          .delete()
-          .eq('course_id', selectedCourse.id)
-          .eq('faculty_id', facultyId);
-        if (error) throw error;
-        toast.success('Faculty unenrolled');
-      } else {
-        // Enroll
-        const { error } = await supabase
-          .from('course_faculty_enrollments')
-          .insert([{ course_id: selectedCourse.id, faculty_id: facultyId }]);
-        if (error) throw error;
-        toast.success('Faculty enrolled');
-      }
-      
-      fetchEnrolledFaculty(selectedCourse.id);
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newCourse), // Send the complete course object
+      });
+      if (!response.ok) throw new Error('Failed to create course.');
+      toast.success('Course created successfully!');
+      setNewCourse({ name: '', code: '', facultyId: '' }); // Reset form
+      fetchCourses(); // Refresh the list of courses
     } catch (error) {
-      toast.error(error.message || 'Operation failed');
+      toast.error(error.message);
     }
   };
 
-  const filteredCourses = courses.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      (c.description && c.description.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  if (!profile) return <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading profile...</div>;
+  const handleDeleteCourse = async (courseId) => {
+    if (window.confirm('Are you sure you want to delete this course?')) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses/${courseId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Failed to delete course.');
+        toast.success('Course deleted successfully!');
+        fetchCourses(); // Refresh the list
+      } catch (error) {
+        toast.error(error.message);
+      }
+    }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent tracking-wide">
-          Manage Courses
-        </h1>
-        {profile.role === 'hod' && (
-          <button
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white font-semibold hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/30 dark:hover:shadow-indigo-700/40 transition duration-300"
-            onClick={() => setShowAddForm((s) => !s)}
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Manage Courses</h1>
+      
+      {/* Create Course Form */}
+      <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md mb-8 border border-slate-200 dark:border-slate-700">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Add New Course</h2>
+        <form onSubmit={handleCreateCourse} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+          <input
+            type="text"
+            name="name"
+            value={newCourse.name}
+            onChange={handleInputChange}
+            placeholder="Course Name (e.g., DSA)"
+            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition"
+          />
+          <input
+            type="text"
+            name="code"
+            value={newCourse.code}
+            onChange={handleInputChange}
+            placeholder="Course Code (e.g., CS-301)"
+            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition"
+          />
+          <select
+            name="facultyId"
+            value={newCourse.facultyId}
+            onChange={handleInputChange}
+            disabled={isFacultyLoading}
+            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition disabled:opacity-50"
           >
-            {showAddForm ? 'Cancel' : 'Add Course'}
-          </button>
-        )}
-      </div>
-
-      {showAddForm && profile.role === 'hod' && (
-        <form className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200 dark:border-gray-700 p-6 rounded-2xl space-y-6 shadow-2xl" onSubmit={handleAddCourse}>
-          <div>
-            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Course Name</label>
-            <input
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent transition duration-200"
-              placeholder="e.g. Data Structures"
-            />
-          </div>
-          <div>
-            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Course Code</label>
-            <input
-              name="code"
-              required
-              value={formData.code}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent transition duration-200"
-              placeholder="e.g. CS101"
-            />
-          </div>
-          <div>
-            <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent transition duration-200"
-              placeholder="Brief course description"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white font-semibold hover:shadow-2xl hover:shadow-green-500/30 dark:hover:shadow-green-700/40 hover:scale-[1.02] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Adding...' : 'Add Course'}
+            <option value="">{isFacultyLoading ? 'Loading Faculty...' : 'Assign Faculty'}</option>
+            {facultyList.map((faculty) => (
+              <option key={faculty.id} value={faculty.id}>
+                {faculty.name}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="flex items-center justify-center p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
+            <Plus size={20} className="mr-2" /> Add Course
           </button>
         </form>
-      )}
-
-      <input
-        type="search"
-        placeholder="Search courses..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-md px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:border-transparent mb-4 shadow-md transition duration-200"
-      />
-
-      <div className="overflow-auto rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg">
-        <table className="min-w-full text-left divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/70 dark:to-purple-900/70">
-            <tr>
-              <th className="py-4 px-6 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">Name</th>
-              <th className="py-4 px-6 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">Code</th>
-              <th className="py-4 px-6 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">Description</th>
-              {profile.role === 'hod' && (
-                <th className="py-4 px-6 font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide text-sm">Actions</th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white/40 dark:bg-gray-900/40">
-            {filteredCourses.length === 0 && (
-              <tr>
-                <td
-                  colSpan={profile.role === 'hod' ? 4 : 3}
-                  className="py-12 text-center text-gray-500 dark:text-gray-400 font-semibold text-lg"
-                >
-                  No courses found.
-                </td>
-              </tr>
-            )}
-            {filteredCourses.map((course) => (
-              <tr key={course.id} className="hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition duration-200 cursor-pointer">
-                <td className="py-4 px-6 text-gray-900 dark:text-gray-100 font-medium">{course.name}</td>
-                <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{course.code}</td>
-                <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{course.description}</td>
-                {profile.role === 'hod' && (
-                  <td className="py-4 px-6 space-x-3">
-                    <button
-                      onClick={() => handleEnrollClick(course)}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold hover:underline transition duration-200"
-                    >
-                      Manage Faculty
-                    </button>
-                    <button
-                      onClick={() => handleDelete(course.id)}
-                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-semibold hover:underline transition duration-200"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {loading && <div className="text-center p-6 font-semibold text-indigo-700 dark:text-indigo-400 text-lg">Loading...</div>}
       </div>
 
-      {/* Faculty Enrollment Modal */}
-      {showEnrollModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full max-h-96 overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Enroll Faculty - {selectedCourse?.name}
-              </h2>
-              <button
-                onClick={() => setShowEnrollModal(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-3xl transition duration-200"
-              >
-                &times;
-              </button>
-            </div>
-            
-            {facultyList.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-6">No faculty available in your department.</p>
-            ) : (
-              <div className="space-y-3">
-                {facultyList.map((faculty) => (
-                  <div
-                    key={faculty.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">{faculty.full_name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{faculty.email}</p>
-                    </div>
-                    <button
-                      onClick={() => handleEnrollToggle(faculty.id)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition duration-200 ${
-                        enrolledFaculty.includes(faculty.id)
-                          ? 'bg-red-500 text-white hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/30'
-                          : 'bg-green-500 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-500/30'
-                      }`}
-                    >
-                      {enrolledFaculty.includes(faculty.id) ? 'Unenroll' : 'Enroll'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+      {/* Existing Courses List */}
+      <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Existing Courses</h2>
+        {isLoading ? (
+          <div className="flex justify-center items-center p-8">
+            <Loader className="animate-spin text-purple-500" />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-3">
+            {courses.length > 0 ? courses.map((course) => (
+              <div key={course.id} className="flex items-center justify-between p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center">
+                  <Book className="text-purple-500 mr-4" />
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-white">{course.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{course.code}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                   {course.faculty && <p className='text-sm text-gray-600 dark:text-slate-300 mr-4 flex items-center'><Users size={16} className='mr-2'/>{course.faculty.name}</p>}
+                  <button onClick={() => handleDeleteCourse(course.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-500/20">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            )) : <p className="text-center text-gray-500 dark:text-slate-400 py-4">No courses have been created yet.</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
