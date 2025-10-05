@@ -34,20 +34,16 @@ const ManageCoursesPage = () => {
   const fetchFaculty = async () => {
     if (!token) return;
     setIsFacultyLoading(true);
-    console.log('--- Starting to fetch REAL faculty list ---'); // DEBUG LOG
     try {
       const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/users/role/faculty`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('API Response Status:', response.status); // DEBUG LOG
       if (!response.ok) {
         throw new Error('Failed to load faculty list from backend.');
       }
       const data = await response.json();
-      console.log('--- Successfully fetched faculty data ---:', data); // DEBUG LOG
       setFacultyList(data); // The state is updated with REAL data
     } catch (error) {
-      console.error("Fetch Faculty Error:", error); // DEBUG LOG
       toast.error(error.message);
     } finally {
       setIsFacultyLoading(false);
@@ -56,8 +52,10 @@ const ManageCoursesPage = () => {
 
   // This useEffect hook is now clean and calls the correct functions
   useEffect(() => {
-    fetchCourses();
-    fetchFaculty();
+    if (token) {
+        fetchCourses();
+        fetchFaculty();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -136,6 +134,7 @@ const ManageCoursesPage = () => {
             className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition disabled:opacity-50"
           >
             <option value="">{isFacultyLoading ? 'Loading Faculty...' : 'Assign Faculty'}</option>
+            {/* This now maps over the REAL faculty data from your database */}
             {facultyList.map((faculty) => (
               <option key={faculty.id} value={faculty.id}>
                 {faculty.name}
