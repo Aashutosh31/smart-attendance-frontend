@@ -12,24 +12,31 @@ const useAuthStore = create((set, get) => ({
   loading: true, // Initial loading state
 
   // New function to initialize the session
-  initializeSession: () => {
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after check
-      if (session) {
-        get().fetchUser();
-      } else {
-        set({ user: null, role: null, isFaceEnrolled: false, isVerified: false });
-      }
+initializeSession: async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error('Error fetching session:', error.message);
+      set({ session: null, user: null, isAuthenticated: false }); // Clear auth state on error
+      return;
+    }
+
+    // THIS IS THE KEY FIX:
+    // Safely access the session, defaulting to null if data is not present.
+    const session = data?.session ?? null;
+
+    set({
+      session,
+      user: session?.user ?? null,
+      isAuthenticated: !!session,
     });
 
-    // Also check the initial session
-    const { data: { session } } = supabase.auth.getSession();
-    set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after initial check
-    if (session) {
-        get().fetchUser();
-    }
-  },
-
+  } catch (err) {
+    console.error("An unexpected error occurred during session initialization:", err);
+    set({ session: null, user: null, isAuthenticated: false }); // Reset state on unexpected errors
+  }
+},
   fetchUser: async () => {
     const token = get().session?.access_token;
     if (!token) return;
