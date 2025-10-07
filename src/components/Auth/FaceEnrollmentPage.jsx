@@ -19,7 +19,7 @@ const FaceEnrollmentPage = () => {
           videoRef.current.srcObject = stream;
         }
       } catch (err) {
-        setError('Could not access camera. Please allow camera permissions.');
+        setError(err.message || 'Could not access camera. Please allow camera permissions.');
       }
     };
     startVideo();
