@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 
-const useAuthStore = create((set, get) => ({
+export const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
   profile: null,
