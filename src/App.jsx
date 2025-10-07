@@ -1,4 +1,3 @@
-// File Path: src/App.jsx
 import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
@@ -13,7 +12,7 @@ import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
 import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
 import RoleBasedRedirect from "./components/Auth/RoleBasedRedirect.jsx";
-import FaceEnrollmentPage from "./components/Auth/FaceEnrollmentPage.jsx"; // <-- YEH NAYA PAGE IMPORT KIYA HAI
+import FaceEnrollmentPage from "./components/Auth/FaceEnrollmentPage.jsx";
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -56,16 +55,24 @@ import StudentVerificationPage from "./components/Student/StudentVerificationPag
 // --- SHARED PAGES ---
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
-const App = () => {
- const { loading } = useAuthStore();
+function App() {
+  // --- THE FIX: Get the 'loading' state and 'initialize' function from your store ---
+  const { initializeSession, loading } = useAuthStore();
 
-if(loading) {
-  return(
-     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h2>Loading...</h2>
+  useEffect(() => {
+    initializeSession();
+  }, [initializeSession]);
+
+  // --- THE FIX: While the session is being initialized, show a loading screen ---
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f0f2f5' }}>
+        <h2 style={{ color: '#333' }}>Loading...</h2>
       </div>
-  );
-}
+    );
+  }
+
+  // --- Once loading is false, render the full application ---
   return (
     <>
       <ToastContainer autoClose={3000} hideProgressBar />
@@ -76,7 +83,6 @@ if(loading) {
           <Route path="/register-college" element={<CollegeRegistrationPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           
-          {/* --- THE FIX: YEH NAYA ROUTE ADD KIYA GAYA HAI --- */}
           <Route
             path="/enroll-face"
             element={
@@ -138,8 +144,7 @@ if(loading) {
         </Routes>
       </Router>
     </>
-);
+  );
 }
 
 export default App;
-
