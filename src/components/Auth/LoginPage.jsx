@@ -17,7 +17,6 @@ const GoogleIcon = () => (
 );
 
 const LoginPage = () => {
-  // Removed role from state
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
   const { signIn, loading } = useAuthStore();
@@ -28,12 +27,12 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const { error } = await signIn(formData.email, formData.password, undefined); // keep signature compatible
+    const { error } = await signIn(formData.email, formData.password);
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Logged in successfully!');
-      navigate('/'); // unchanged
+      navigate('/');
     }
   };
 

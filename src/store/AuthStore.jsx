@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 import axios from 'axios';
 
+// Add signIn function to the store!
 const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
@@ -9,7 +10,7 @@ const useAuthStore = create((set, get) => ({
   isFaceEnrolled: false,
   isVerified: false,
   role: null,
-  loading: true,
+  loading: false,
 
   initializeSession: async () => {
     // Listen for auth state changes
@@ -52,6 +53,20 @@ const useAuthStore = create((set, get) => ({
       console.error("Failed to fetch user:", error);
       get().signOut();
     }
+  },
+
+  signIn: async (email, password) => {
+    set({ loading: true });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      set({ loading: false });
+      return { error };
+    }
+    set({ session: data.session, isAuthenticated: !!data.session, loading: false });
+    if (data.session) {
+      await get().fetchUser();
+    }
+    return { error: null };
   },
 
   updateFaceEnrollmentStatus: (status) => {

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAuthStore } from "./store/AuthStore";
+import { useAuthStore } from "./store/AuthStore.jsx";
 
 // --- CORE & AUTH COMPONENTS ---
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
