@@ -1,34 +1,34 @@
+// File Path: src/components/Auth/ProtectedRoute.jsx
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/AuthStore";
-import PropTypes from "prop-types";
+import { toast } from "react-toastify";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { loading, session, user, isFaceEnrolled } = useAuthStore();
-  const location = useLocation(); // Get the current URL location
+  const { isAuthenticated, role, isVerified, isFaceEnrolled } = useAuthStore();
+  const location = useLocation();
 
-  if (loading) {
-    return <div>Loading...</div>; // Or a more stylish spinner component
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  if (!session || !user) {
-    return <Navigate to="/login" />;
+
+  // --- THE FIX: Check for face enrollment first ---
+  if (!isFaceEnrolled) {
+    return <Navigate to="/enroll-face" replace />;
   }
-  if (session && !isFaceEnrolled) {
-    if (location.pathname !== "/enroll-face") {
-      return <Navigate to="/enroll-face" />;
-    }
+  
+  // After face enrollment, check for verification
+  if (!isVerified) {
+    toast.info("Please complete your profile verification.");
+    const verificationPath = `/${role}/verify`;
+    return <Navigate to={verificationPath} replace />;
   }
-  if (allowedRoles) {
-    const userRole = user?.role;
-    if (!allowedRoles.includes(userRole)) {
-      return <Navigate to="/unauthorized" />;
-    }
+  
+  // After verification, check for role
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/unauthorized" replace />;
   }
+
   return children;
-};
-
-ProtectedRoute.propTypes = {
-  children: PropTypes.node.isRequired,
-  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ProtectedRoute;

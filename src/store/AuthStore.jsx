@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 import axios from 'axios';
 
-// Add signIn function to the store!
 const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
@@ -10,12 +9,12 @@ const useAuthStore = create((set, get) => ({
   isFaceEnrolled: false,
   isVerified: false,
   role: null,
-  loading: false,
+  loading: true, // Initial loading state
 
-  initializeSession: async () => {
-    // Listen for auth state changes
+  // New function to initialize the session
+  initializeSession: () => {
     supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, isAuthenticated: !!session, loading: false });
+      set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after check
       if (session) {
         get().fetchUser();
       } else {
@@ -23,11 +22,11 @@ const useAuthStore = create((set, get) => ({
       }
     });
 
-    // Initial session check (must await for correct SSR/CSR)
-    const { data } = await supabase.auth.getSession();
-    set({ session: data.session, isAuthenticated: !!data.session, loading: false });
-    if (data.session) {
-      get().fetchUser();
+    // Also check the initial session
+    const { data: { session } } = supabase.auth.getSession();
+    set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after initial check
+    if (session) {
+        get().fetchUser();
     }
   },
 
@@ -39,36 +38,25 @@ const useAuthStore = create((set, get) => ({
       const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+      
       if (data.user) {
         set({
           user: data.user,
           role: data.user.role,
-          isFaceEnrolled: !!(data.user.faceDescriptor && data.user.faceDescriptor.length > 0),
-          isVerified: !!data.user.isVerified,
+          // --- THE FIX: We need to check if the face descriptor exists and is not empty ---
+          isFaceEnrolled: data.user.faceDescriptor && data.user.faceDescriptor.length > 0,
+          isVerified: data.user.isVerified,
           isAuthenticated: true,
         });
       }
     } catch (error) {
       console.error("Failed to fetch user:", error);
+      // If fetching user fails, sign them out
       get().signOut();
     }
   },
 
-  signIn: async (email, password) => {
-    set({ loading: true });
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      set({ loading: false });
-      return { error };
-    }
-    set({ session: data.session, isAuthenticated: !!data.session, loading: false });
-    if (data.session) {
-      await get().fetchUser();
-    }
-    return { error: null };
-  },
-
+  // --- THE FIX: This new function will be called from the enrollment page ---
   updateFaceEnrollmentStatus: (status) => {
     set({ isFaceEnrolled: status });
   },
@@ -79,4 +67,5 @@ const useAuthStore = create((set, get) => ({
   },
 }));
 
+// We don't call initialize here anymore, it will be called from App.jsx
 export { useAuthStore };

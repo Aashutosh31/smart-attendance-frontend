@@ -3,7 +3,9 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAuthStore } from "./store/AuthStore.jsx";
+
+// --- STATE MANAGEMENT ---
+import { useAuthStore } from "./store/AuthStore";
 
 // --- CORE & AUTH COMPONENTS ---
 import ProtectedRoute from "./components/Auth/ProtectedRoute.jsx";
@@ -11,7 +13,7 @@ import LoginPage from "./components/Auth/LoginPage.jsx";
 import UnauthorizedPage from "./components/Auth/UnauthorizedPage.jsx";
 import CollegeRegistrationPage from "./components/Auth/CollegeRegistrationPage.jsx";
 import RoleBasedRedirect from "./components/Auth/RoleBasedRedirect.jsx";
-import FaceEnrollmentPage from "./components/Auth/FaceEnrollmentPage.jsx";
+import FaceEnrollmentPage from "./components/Auth/FaceEnrollmentPage.jsx"; // <-- YEH NAYA PAGE IMPORT KIYA HAI
 
 // --- LAYOUTS / DASHBOARDS ---
 import AdminDashboard from "./components/Admin/AdminDashboard.jsx";
@@ -56,12 +58,9 @@ import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
 function App() {
   const { initializeSession } = useAuthStore();
-
   useEffect(() => {
-    // Always use async for SSR/CSR compatibility
     initializeSession();
-    // eslint-disable-next-line
-  }, []);
+  }, [initializeSession]);
 
   return (
     <>
@@ -72,8 +71,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register-college" element={<CollegeRegistrationPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-          {/* --- NEW ROUTE FOR FACE ENROLLMENT --- */}
+          
+          {/* --- THE FIX: YEH NAYA ROUTE ADD KIYA GAYA HAI --- */}
           <Route
             path="/enroll-face"
             element={
@@ -103,7 +102,7 @@ function App() {
             <Route path="coordinators" element={<ManageCoordinators />} />
             <Route path="courses" element={<ManageCoursesPage />} />
             <Route path="student-reports" element={<StudentsReportPage />} />
-            <Route path="students" element={<ViewStudents />} />
+             <Route path="students" element={<ViewStudents />} />
             <Route path="reports" element={<FacultyReportsPage />} />
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
             <Route path="settings" element={<SettingsPage />} />
