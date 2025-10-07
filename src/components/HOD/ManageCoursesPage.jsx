@@ -18,7 +18,7 @@ const ManageCoursesPage = () => {
   const fetchCourses = async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses`, {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to load courses.');
@@ -71,7 +71,7 @@ const ManageCoursesPage = () => {
       return toast.error('Please fill all fields, including selecting a faculty.');
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses`, {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const ManageCoursesPage = () => {
   const handleDeleteCourse = async (courseId) => {
     if (window.confirm('Are you sure you want to delete this course?')) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/courses/${courseId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses/${courseId}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
