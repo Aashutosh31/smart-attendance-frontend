@@ -32,7 +32,22 @@ const LoginPage = () => {
       toast.error(error.message);
     } else {
       toast.success('Logged in successfully!');
-      navigate('/');
+      // Wait for user and isFaceEnrolled to be set before navigating
+      let tries = 0;
+      const interval = setInterval(() => {
+        const { user, isFaceEnrolled } = useAuthStore.getState();
+        if (user) {
+          clearInterval(interval);
+          // If not enrolled, go to enroll-face, else go to dashboard
+          if (!isFaceEnrolled) {
+            navigate('/enroll-face');
+          } else {
+            navigate('/');
+          }
+        }
+        tries++;
+        if (tries > 20) clearInterval(interval); // Prevent infinite loop
+      }, 100);
     }
   };
 
