@@ -1,78 +1,71 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
-import axios from 'axios';
 
 const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
-  isAuthenticated: false,
+  profile: null,
+  loading: false, // <-- THE FIX: Changed initial state from true to false
+  error: null,
   isFaceEnrolled: false,
-  isVerified: false,
-  role: null,
-  loading: true, // Initial loading state
 
-  // New function to initialize the session
-initializeSession: async () => {
-  try {
-    const { data, error } = await supabase.auth.getSession();
-
-    if (error) {
-      console.error('Error fetching session:', error.message);
-      set({ session: null, user: null, isAuthenticated: false }); // Clear auth state on error
-      return;
-    }
-
-    // THIS IS THE KEY FIX:
-    // Safely access the session, defaulting to null if data is not present.
-    const session = data?.session ?? null;
-
-    set({
-      session,
-      user: session?.user ?? null,
-      isAuthenticated: !!session,
-    });
-
-  } catch (err) {
-    console.error("An unexpected error occurred during session initialization:", err);
-    set({ session: null, user: null, isAuthenticated: false }); // Reset state on unexpected errors
-  }
-},
-  fetchUser: async () => {
-    const token = get().session?.access_token;
-    if (!token) return;
+  fetchFaceEnrollmentStatus: async () => {
+    const session = get().session;
+    if (!session?.access_token) return;
 
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/auth/status`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
       });
-      
-      if (data.user) {
-        set({
-          user: data.user,
-          role: data.user.role,
-          // --- THE FIX: We need to check if the face descriptor exists and is not empty ---
-          isFaceEnrolled: data.user.faceDescriptor && data.user.faceDescriptor.length > 0,
-          isVerified: data.user.isVerified,
-          isAuthenticated: true,
-        });
+      if (response.ok) {
+        const { isFaceEnrolled } = await response.json();
+        set({ isFaceEnrolled });
       }
     } catch (error) {
-      console.error("Failed to fetch user:", error);
-      // If fetching user fails, sign them out
-      get().signOut();
+      console.error("Failed to fetch face enrollment status:", error);
     }
   },
 
-  // --- THE FIX: This new function will be called from the enrollment page ---
-  updateFaceEnrollmentStatus: (status) => {
-    set({ isFaceEnrolled: status });
+  initializeSession: async () => {
+    // We don't set loading to true here to avoid the button showing "Signing In..." on page load
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      set({ session, user: session.user, profile });
+      await get().fetchFaceEnrollmentStatus();
+    }
+  },
+
+  signIn: async (email, password) => {
+    set({ loading: true, error: null }); // Set loading to true ONLY when signIn is called
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+      set({ session: data.session, user: data.user, profile });
+      await get().fetchFaceEnrollmentStatus();
+      return { user: data.user };
+    } catch (error) {
+      set({ error: error.message });
+      return { error };
+    } finally {
+      set({ loading: false }); // Set loading back to false when done
+    }
   },
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, user: null, isAuthenticated: false, role: null, isFaceEnrolled: false, isVerified: false });
+    set({ user: null, profile: null, session: null, error: null, isFaceEnrolled: false });
   },
+  
+  updateFaceEnrollmentStatus: (status) => {
+    set({ isFaceEnrolled: status });
+  }
 }));
 
-// We don't call initialize here anymore, it will be called from App.jsx
-export { useAuthStore };
+// Initialize the session when the app loads
+useAuthStore.getState().initializeSession();
+
+export default useAuthStore;
