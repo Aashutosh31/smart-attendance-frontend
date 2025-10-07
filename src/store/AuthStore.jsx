@@ -1,73 +1,78 @@
-import { create } from "zustand";
-import { supabase } from "../supabaseClient";
+import { create } from 'zustand';
+import { supabase } from '../supabaseClient';
+import axios from 'axios';
 
-export const useAuthStore = create((set, get) => ({
+const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
-  profile: null,
-  loading: true,
-  error: null,
+  isAuthenticated: false,
   isFaceEnrolled: false,
+  isVerified: false,
+  role: null,
+  loading: true,
 
-  fetchFaceEnrollmentStatus: async () => {
-    const session = get().session;
-    if (!session?.access_token) return;
+  initialize: () => {
+    supabase.auth.onAuthStateChange((_event, session) => {
+      set({ session, isAuthenticated: !!session, loading: true });
+      if (session) {
+        get().fetchUser();
+      } else {
+        set({ user: null, role: null, isFaceEnrolled: false, isVerified: false, loading: false });
+      }
+    });
+
+    const initialSession = supabase.auth.getSession();
+    if (initialSession) {
+        set({ session: initialSession, isAuthenticated: !!initialSession, loading: true });
+        get().fetchUser();
+    } else {
+        set({loading: false});
+    }
+  },
+
+  fetchUser: async () => {
+    set({ loading: true }); // --- THIS IS THE FIX ---
+    const token = get().session?.access_token;
+
+    if (!token) {
+      set({ loading: false });
+      return;
+    }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/auth/status`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+      const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.ok) {
-        const { isFaceEnrolled } = await response.json();
-        set({ isFaceEnrolled });
+      
+      if (data.user) {
+        set({
+          user: data.user,
+          role: data.user.role,
+          isFaceEnrolled: data.user.faceDescriptor && data.user.faceDescriptor.length > 0,
+          isVerified: data.user.isVerified,
+          isAuthenticated: true,
+        });
       }
     } catch (error) {
-      console.error("Failed to fetch face enrollment status:", error);
-    }
-  },
-
-  initializeSession: async () => {
-    set({ loading: true });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const { data: profile,error } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-      if(error){
-        console.log("Error fetching profile:", error);
-      }else{
-        set({ session, user: session.user, profile });
-      }
-      await get().fetchFaceEnrollmentStatus();
-    }
-    set({ loading: false });
-  },
-
-  signIn: async (email, password) => {
-    set({ loading: true, error: null });
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
-      set({ session: data.session, user: data.user, profile });
-      await get().fetchFaceEnrollmentStatus();
-      return { user: data.user };
-    } catch (error) {
-      set({ error: error.message });
-      return { error };
+      console.error("Failed to fetch user:", error);
+      // On error, reset the state
+      set({ user: null, role: null, isAuthenticated: false, isFaceEnrolled: false, isVerified: false });
     } finally {
       set({ loading: false });
     }
   },
 
-  signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, profile: null, session: null, error: null, isFaceEnrolled: false });
-  },
-  
   updateFaceEnrollmentStatus: (status) => {
     set({ isFaceEnrolled: status });
-  }
+  },
+
+  signOut: async () => {
+    await supabase.auth.signOut();
+    set({ session: null, user: null, isAuthenticated: false, role: null, isFaceEnrolled: false, isVerified: false });
+  },
 }));
 
-useAuthStore.getState().initializeSession();
+// Initialize the store right away
+useAuthStore.getState().initialize();
+
+export { useAuthStore };
