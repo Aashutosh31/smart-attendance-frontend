@@ -12,9 +12,12 @@ const FaceEnrollmentPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let stream = null; // Keep track of the stream
+
     const startVideo = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        // Assign the stream to the variable
+        stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -23,6 +26,13 @@ const FaceEnrollmentPage = () => {
       }
     };
     startVideo();
+
+    // THIS IS THE CLEANUP FUNCTION
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
   const handleCapture = async () => {
