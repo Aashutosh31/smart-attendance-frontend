@@ -36,7 +36,7 @@ const useAuthStore = create((set, get) => ({
     if (!token) return;
 
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/me`, {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
