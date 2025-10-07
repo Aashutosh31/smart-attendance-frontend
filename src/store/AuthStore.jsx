@@ -9,30 +9,35 @@ const useAuthStore = create((set, get) => ({
   isFaceEnrolled: false,
   isVerified: false,
   role: null,
-  loading: true, // Initial loading state
+  loading: true,
 
-  // New function to initialize the session
-  initializeSession: () => {
+  initialize: () => {
     supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after check
+      set({ session, isAuthenticated: !!session, loading: true });
       if (session) {
         get().fetchUser();
       } else {
-        set({ user: null, role: null, isFaceEnrolled: false, isVerified: false });
+        set({ user: null, role: null, isFaceEnrolled: false, isVerified: false, loading: false });
       }
     });
 
-    // Also check the initial session
-    const { data: { session } } = supabase.auth.getSession();
-    set({ session, isAuthenticated: !!session, loading: false }); // Set loading to false after initial check
-    if (session) {
+    const initialSession = supabase.auth.getSession();
+    if (initialSession) {
+        set({ session: initialSession, isAuthenticated: !!initialSession, loading: true });
         get().fetchUser();
+    } else {
+        set({loading: false});
     }
   },
 
   fetchUser: async () => {
+    set({ loading: true }); // --- THIS IS THE FIX ---
     const token = get().session?.access_token;
-    if (!token) return;
+
+    if (!token) {
+      set({ loading: false });
+      return;
+    }
 
     try {
       const { data } = await axios.get(`${import.meta.env.VITE_API_HOST}/api/auth/me`, {
@@ -43,7 +48,6 @@ const useAuthStore = create((set, get) => ({
         set({
           user: data.user,
           role: data.user.role,
-          // --- THE FIX: We need to check if the face descriptor exists and is not empty ---
           isFaceEnrolled: data.user.faceDescriptor && data.user.faceDescriptor.length > 0,
           isVerified: data.user.isVerified,
           isAuthenticated: true,
@@ -51,12 +55,13 @@ const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       console.error("Failed to fetch user:", error);
-      // If fetching user fails, sign them out
-      get().signOut();
+      // On error, reset the state
+      set({ user: null, role: null, isAuthenticated: false, isFaceEnrolled: false, isVerified: false });
+    } finally {
+      set({ loading: false });
     }
   },
 
-  // --- THE FIX: This new function will be called from the enrollment page ---
   updateFaceEnrollmentStatus: (status) => {
     set({ isFaceEnrolled: status });
   },
@@ -67,5 +72,5 @@ const useAuthStore = create((set, get) => ({
   },
 }));
 
-// We don't call initialize here anymore, it will be called from App.jsx
+
 export { useAuthStore };
