@@ -1,11 +1,11 @@
-import { create } from 'zustand';
-import { supabase } from '../supabaseClient';
+import { create } from "zustand";
+import { supabase } from "../supabaseClient";
 
 export const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
   profile: null,
-  loading: false, // <-- THE FIX: Changed initial state from true to false
+  loading: true,
   error: null,
   isFaceEnrolled: false,
 
@@ -29,17 +29,22 @@ export const useAuthStore = create((set, get) => ({
   },
 
   initializeSession: async () => {
-    // We don't set loading to true here to avoid the button showing "Signing In..." on page load
+    set({ loading: true });
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-      set({ session, user: session.user, profile });
+      const { data: profile,error } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+      if(error){
+        console.log("Error fetching profile:", error);
+      }else{
+        set({ session, user: session.user, profile });
+      }
       await get().fetchFaceEnrollmentStatus();
     }
+    set({ loading: false });
   },
 
   signIn: async (email, password) => {
-    set({ loading: true, error: null }); // Set loading to true ONLY when signIn is called
+    set({ loading: true, error: null });
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -51,7 +56,7 @@ export const useAuthStore = create((set, get) => ({
       set({ error: error.message });
       return { error };
     } finally {
-      set({ loading: false }); // Set loading back to false when done
+      set({ loading: false });
     }
   },
 
@@ -65,7 +70,4 @@ export const useAuthStore = create((set, get) => ({
   }
 }));
 
-// Initialize the session when the app loads
 useAuthStore.getState().initializeSession();
-
-export default useAuthStore;

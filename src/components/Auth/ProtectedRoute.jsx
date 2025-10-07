@@ -1,34 +1,44 @@
-// File Path: src/components/Auth/ProtectedRoute.jsx
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/AuthStore";
-import { toast } from "react-toastify";
+import PropTypes from "prop-types";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, role, isVerified, isFaceEnrolled } = useAuthStore();
-  const location = useLocation();
+  const { loading, session, profile, isFaceEnrolled } = useAuthStore();
+  const location = useLocation(); // Get the current URL location
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (loading) {
+    return <div>Loading...</div>; // Or a more stylish spinner component
   }
 
-  // --- THE FIX: Check for face enrollment first ---
-  if (!isFaceEnrolled) {
-    return <Navigate to="/enroll-face" replace />;
+  // If the user is not logged in at all, send them to the login page.
+  if (!session) {
+    return <Navigate to="/login" />;
   }
   
-  // After face enrollment, check for verification
-  if (!isVerified) {
-    toast.info("Please complete your profile verification.");
-    const verificationPath = `/${role}/verify`;
-    return <Navigate to={verificationPath} replace />;
-  }
-  
-  // After verification, check for role
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+  // THE CRITICAL LOGIC:
+  // If the user is logged in BUT needs to enroll their face...
+  if (session && !isFaceEnrolled) {
+    // ...only redirect them IF they are NOT already on the enrollment page.
+    if (location.pathname !== "/enroll-face") {
+      return <Navigate to="/enroll-face" />;
+    }
   }
 
+  // If the route has specific role requirements, check them.
+  if (allowedRoles) {
+    const userRole = profile?.role;
+    if (!allowedRoles.includes(userRole)) {
+      return <Navigate to="/unauthorized" />;
+    }
+  }
+
+  // If all checks pass, render the component the user asked for.
   return children;
+};
+
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ProtectedRoute;
