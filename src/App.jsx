@@ -56,12 +56,16 @@ import StudentVerificationPage from "./components/Student/StudentVerificationPag
 // --- SHARED PAGES ---
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
-function App() {
-  const { initializeSession } = useAuthStore();
-  useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
+const App = () => {
+ const { loading } = useAuthStore();
 
+if(loading) {
+  return(
+     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <h2>Loading...</h2>
+      </div>
+  );
+}
   return (
     <>
       <ToastContainer autoClose={3000} hideProgressBar />
@@ -134,7 +138,7 @@ function App() {
         </Routes>
       </Router>
     </>
-  );
+);
 }
 
 export default App;

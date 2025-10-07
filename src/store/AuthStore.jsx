@@ -9,29 +9,31 @@ const useAuthStore = create((set, get) => ({
   isFaceEnrolled: false,
   isVerified: false,
   role: null,
-  loading: true,
+  loading: true, // --- Start with loading as true ---
 
   initialize: () => {
     supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, isAuthenticated: !!session, loading: true });
       if (session) {
+        set({ session, isAuthenticated: true });
         get().fetchUser();
       } else {
-        set({ user: null, role: null, isFaceEnrolled: false, isVerified: false, loading: false });
+        // --- If no session, stop loading and clear user data ---
+        set({ session: null, user: null, isAuthenticated: false, role: null, isFaceEnrolled: false, isVerified: false, loading: false });
       }
     });
 
-    const initialSession = supabase.auth.getSession();
-    if (initialSession) {
-        set({ session: initialSession, isAuthenticated: !!initialSession, loading: true });
-        get().fetchUser();
+    // --- Check for initial session on app load ---
+    const { data: { session } } = supabase.auth.getSession();
+    if (session) {
+      set({ session, isAuthenticated: true });
+      get().fetchUser();
     } else {
-        set({loading: false});
+      set({ loading: false }); // --- If no session, stop loading ---
     }
   },
 
   fetchUser: async () => {
-    set({ loading: true }); // --- THIS IS THE FIX ---
+    set({ loading: true }); // --- Set loading to true when fetching ---
     const token = get().session?.access_token;
 
     if (!token) {
@@ -50,15 +52,13 @@ const useAuthStore = create((set, get) => ({
           role: data.user.role,
           isFaceEnrolled: data.user.faceDescriptor && data.user.faceDescriptor.length > 0,
           isVerified: data.user.isVerified,
-          isAuthenticated: true,
         });
       }
     } catch (error) {
       console.error("Failed to fetch user:", error);
-      // On error, reset the state
       set({ user: null, role: null, isAuthenticated: false, isFaceEnrolled: false, isVerified: false });
     } finally {
-      set({ loading: false });
+      set({ loading: false }); // --- Stop loading after fetch is complete ---
     }
   },
 
@@ -72,7 +72,7 @@ const useAuthStore = create((set, get) => ({
   },
 }));
 
-// Initialize the store right away
+// Initialize the store
 useAuthStore.getState().initialize();
 
 export { useAuthStore };
