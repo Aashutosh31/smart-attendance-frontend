@@ -71,6 +71,7 @@ const useAuthStore = create((set, get) => ({
     set({ session: null, user: null, isAuthenticated: false, role: null, isFaceEnrolled: false, isVerified: false });
   },
 }));
-
+// Initialize the store right away
+useAuthStore.getState().initialize();
 
 export { useAuthStore };
