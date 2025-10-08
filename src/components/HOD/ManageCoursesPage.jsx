@@ -8,13 +8,11 @@ const ManageCoursesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [newCourse, setNewCourse] = useState({ name: '', code: '', facultyId: '' });
   
-  // State for the real faculty data fetched from the backend
   const [facultyList, setFacultyList] = useState([]);
   const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
   const token = useAuthStore((state) => state.session?.access_token);
 
-  // Function to fetch all existing courses from the backend
   const fetchCourses = async () => {
     if (!token) return;
     try {
@@ -31,33 +29,25 @@ const ManageCoursesPage = () => {
     }
   };
 
-  // Fetches the list of REAL faculty members from the backend
   const fetchFaculty = async () => {
     if (!token) return;
-    setIsFacultyLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/users/role/faculty`, {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/faculty`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) {
-        throw new Error('Failed to load faculty list from backend.');
-      }
+      if (!response.ok) throw new Error('Failed to load faculty.');
       const data = await response.json();
-      setFacultyList(data); // The state is updated with REAL data from your database
+      setFacultyList(data);
     } catch (error) {
       toast.error(error.message);
     } finally {
       setIsFacultyLoading(false);
     }
   };
-
-  // This useEffect hook is now clean and calls the correct functions
+  
   useEffect(() => {
-    if (token) {
-        fetchCourses();
-        fetchFaculty();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchCourses();
+    fetchFaculty();
   }, [token]);
 
   const handleInputChange = (e) => {
@@ -65,10 +55,11 @@ const ManageCoursesPage = () => {
     setNewCourse({ ...newCourse, [name]: value });
   };
 
-  const handleCreateCourse = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newCourse.name || !newCourse.code || !newCourse.facultyId) {
-      return toast.error('Please fill all fields, including selecting a faculty.');
+    if (!token) {
+      toast.error('You must be logged in to create a course.');
+      return;
     }
     try {
       const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses`, {
@@ -79,77 +70,103 @@ const ManageCoursesPage = () => {
         },
         body: JSON.stringify(newCourse),
       });
-      if (!response.ok) throw new Error('Failed to create course.');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create course');
+      }
+
+      const createdCourse = await response.json();
       toast.success('Course created successfully!');
-      setNewCourse({ name: '', code: '', facultyId: '' });
-      fetchCourses();
+      setCourses([...courses, createdCourse]);
+      setNewCourse({ name: '', code: '', facultyId: '' }); // Reset form
     } catch (error) {
       toast.error(error.message);
     }
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses/${courseId}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Failed to delete course.');
-        toast.success('Course deleted successfully!');
-        fetchCourses();
-      } catch (error) {
-        toast.error(error.message);
-      }
+    if (!token) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to delete course.');
+      setCourses(courses.filter(c => c.id !== courseId));
+      toast.success('Course deleted successfully!');
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Manage Courses</h1>
-      
-      <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md mb-8 border border-slate-200 dark:border-slate-700">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Add New Course</h2>
-        <form onSubmit={handleCreateCourse} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-          <input
-            type="text"
-            name="name"
-            value={newCourse.name}
-            onChange={handleInputChange}
-            placeholder="Course Name (e.g., DSA)"
-            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition"
-          />
-          <input
-            type="text"
-            name="code"
-            value={newCourse.code}
-            onChange={handleInputChange}
-            placeholder="Course Code (e.g., CS-301)"
-            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition"
-          />
-          <select
-            name="facultyId"
-            value={newCourse.facultyId}
-            onChange={handleInputChange}
-            disabled={isFacultyLoading}
-            className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 border-2 border-transparent focus:border-purple-500 focus:ring-0 transition disabled:opacity-50"
-          >
-            <option value="">{isFacultyLoading ? 'Loading Faculty...' : 'Assign Faculty'}</option>
-            {/* This now maps over the REAL faculty data from your database */}
-            {facultyList.map((faculty) => (
-              <option key={faculty.id} value={faculty.id}>
-                {faculty.name}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="flex items-center justify-center p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold">
-            <Plus size={20} className="mr-2" /> Add Course
-          </button>
-        </form>
-      </div>
+    <div className="p-6 bg-gray-50 dark:bg-slate-900 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Manage Courses</h1>
+        </div>
+        
+        {/* Form for adding a new course */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white flex items-center">
+            <Plus className="mr-3 text-purple-500"/>
+            Add New Course
+          </h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="flex flex-col">
+              <label htmlFor="name" className="text-sm font-medium text-gray-600 dark:text-slate-300 mb-1">Course Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={newCourse.name}
+                onChange={handleInputChange}
+                className="p-2 border rounded-md bg-gray-50 dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                placeholder="e.g., Intro to Web Dev"
+                required
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="code" className="text-sm font-medium text-gray-600 dark:text-slate-300 mb-1">Course Code</label>
+              <input
+                type="text"
+                id="code"
+                name="code"
+                value={newCourse.code}
+                onChange={handleInputChange}
+                className="p-2 border rounded-md bg-gray-50 dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                placeholder="e.g., CS101"
+                required
+              />
+            </div>
+            <div className="flex flex-col">
+              <label htmlFor="facultyId" className="text-sm font-medium text-gray-600 dark:text-slate-300 mb-1">Assign Faculty</label>
+              <select
+                id="facultyId"
+                name="facultyId"
+                value={newCourse.facultyId}
+                onChange={handleInputChange}
+                className="p-2 border rounded-md bg-gray-50 dark:bg-slate-700 dark:text-white dark:border-slate-600"
+                required
+              >
+                <option value="">{isFacultyLoading ? 'Loading...' : 'Select Faculty'}</option>
+                {!isFacultyLoading && facultyList.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="md:col-start-3 bg-purple-600 text-white p-2 rounded-md hover:bg-purple-700 transition-colors duration-300"
+            >
+              Create Course
+            </button>
+          </form>
+        </div>
 
-      <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl shadow-md border border-slate-200 dark:border-slate-700">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-white">Existing Courses</h2>
+        {/* List of existing courses */}
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Existing Courses</h2>
         {isLoading ? (
           <div className="flex justify-center items-center p-8">
             <Loader className="animate-spin text-purple-500" />
@@ -172,7 +189,9 @@ const ManageCoursesPage = () => {
                   </button>
                 </div>
               </div>
-            )) : <p className="text-center text-gray-500 dark:text-slate-400 py-4">No courses have been created yet.</p>}
+            )) : (
+              <p className="text-center text-gray-500 dark:text-slate-400 py-4">No courses have been created yet.</p>
+            )}
           </div>
         )}
       </div>
