@@ -20,7 +20,7 @@ const LoginPage = () => {
   // Removed role from state
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
-  const { signIn, loading } = useAuthStore();
+  const { signIn, loading, signInWithGoogle } = useAuthStore();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -35,6 +35,15 @@ const LoginPage = () => {
       toast.success('Logged in successfully!');
       navigate('/'); // unchanged
     }
+  };
+  // --- ADD THIS NEW HANDLER ---
+  const handleGoogleLogin = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast.error(error.message);
+    }
+    // No success toast or navigation here,
+    // Supabase handles the redirect automatically.
   };
 
   return (
@@ -99,6 +108,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   disabled={loading}
+                  onClick={handleGoogleLogin}
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold border border-pink-400/40 text-pink-200 bg-gradient-to-r from-white/10 via-pink-500/20 to-purple-500/10 hover:border-pink-300/60 transition"
                   aria-label="Sign In with Google"
                 >

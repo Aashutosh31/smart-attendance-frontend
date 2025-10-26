@@ -60,6 +60,31 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // --- ADD THIS NEW FUNCTION ---
+  signInWithGoogle: async () => {
+    set({ loading: true, error: null });
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // You can add scopes here if needed, e.g., 'profile email'
+          // By default, Supabase requests 'email'.
+        },
+      });
+
+      if (error) throw error;
+      
+      // Note: signInWithOAuth redirects, so the app will reload.
+      // The initializeSession function will handle fetching the
+      // user and profile after the redirect.
+      return { data };
+    } catch (error) {
+      set({ error: error.message, loading: false });
+      return { error };
+    }
+    // No finally block to set loading: false, as the page will redirect
+  },
+
   signOut: async () => {
     await supabase.auth.signOut();
     set({ user: null, profile: null, session: null, error: null, isFaceEnrolled: false });
