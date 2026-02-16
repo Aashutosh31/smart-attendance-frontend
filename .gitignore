@@ -25,3 +25,7 @@ dist-ssr
 
 # Environment variables
 .env
+.env.*
+
+# Supabase local/temp artifacts
+supabase/.temp/
