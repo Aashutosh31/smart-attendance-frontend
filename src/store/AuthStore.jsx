@@ -1,6 +1,59 @@
 import { create } from "zustand";
 import { supabase } from "../supabaseClient";
 
+const normalizeRole = (role) => {
+  if (!role) return "student";
+  if (role === "program_coordinator") return "coordinator";
+  return role;
+};
+
+const buildProfilePayload = (sessionUser) => {
+  const metadata = sessionUser?.user_metadata || {};
+  return {
+    id: sessionUser.id,
+    email: sessionUser.email,
+    full_name: metadata.full_name || metadata.name || sessionUser.email,
+    role: normalizeRole(metadata.role),
+    college_id: metadata.college_id || null,
+    department: metadata.department || null,
+    course: metadata.course || null,
+    roll_number: metadata.roll_number || metadata.enrollment_number || null,
+    updated_at: new Date().toISOString(),
+  };
+};
+
+const ensureProfileRow = async (sessionUser) => {
+  const payload = buildProfilePayload(sessionUser);
+
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", sessionUser.id)
+    .maybeSingle();
+
+  if (profileRow) return profileRow;
+
+  const { data: userRow } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", sessionUser.id)
+    .maybeSingle();
+
+  if (userRow) {
+    return {
+      ...payload,
+      ...userRow,
+      role: normalizeRole(userRow.role),
+    };
+  }
+
+  // Last-resort in-memory profile so app can continue until DB rows are created by trigger/backend sync.
+  return {
+    ...payload,
+    is_face_verified: false,
+  };
+};
+
 export const useAuthStore = create((set, get) => ({
   session: null,
   user: null,
@@ -32,12 +85,28 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data: profile,error } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-      if(error){
+      let profile = null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (error) {
         console.log("Error fetching profile:", error);
-      }else{
-        set({ session, user: session.user, profile });
+      } else {
+        profile = data;
       }
+
+      if (!profile) {
+        try {
+          profile = await ensureProfileRow(session.user);
+        } catch (ensureError) {
+          console.log("Error creating fallback profile:", ensureError);
+        }
+      }
+
+      set({ session, user: session.user, profile });
       await get().fetchFaceEnrollmentStatus();
     }
     set({ loading: false });
@@ -48,7 +117,19 @@ export const useAuthStore = create((set, get) => ({
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+      let profile = null;
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      profile = profileData;
+
+      if (!profile) {
+        profile = await ensureProfileRow(data.user);
+      }
+
       set({ session: data.session, user: data.user, profile });
       await get().fetchFaceEnrollmentStatus();
       return { user: data.user };

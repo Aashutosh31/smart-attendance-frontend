@@ -26,6 +26,24 @@ dist-ssr
 # Environment variables
 .env
 .env.*
+!.env.example
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.ovpn
+*.keystore
+*.jks
+*.mobileprovision
+secrets/
+.secrets/
 
 # Supabase local/temp artifacts
 supabase/.temp/
+
+# Hide local SQL schema migration file(s)
+supabase/migrations/*.sql

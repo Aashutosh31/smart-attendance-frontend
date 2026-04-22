@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Building2, KeyRound, Mail, User, Shield } from "lucide-react";
-import { supabase } from "../../supabaseClient";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate, Link } from "react-router-dom";
@@ -36,42 +35,27 @@ const CollegeRegistrationPage = () => {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: 'admin',
-          }
-        }
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/college-admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          collegeName: formData.collegeName,
+          collegeId: formData.collegeId,
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
-      if (authError) throw authError;
-
-      const { data: collegeData, error: collegeError } = await supabase
-        .from('colleges')
-        .insert({
-          name: formData.collegeName,
-          college_id_text: formData.collegeId,
-          created_at: new Date().toISOString(),
-          created_by: authData.user.id
-        })
-        .select()
-        .single();
-
-      if (collegeError) throw collegeError;
-
-      // This assumes you have a 'profiles' table that gets a row when a user signs up (e.g., via a trigger).
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          college_id: collegeData.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) throw profileError;
+      const responseBody = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw {
+          message: responseBody?.message || 'Failed to create admin account',
+          code: responseBody?.code,
+        };
+      }
 
       toast.success('College and admin account created successfully!');
 
