@@ -54,7 +54,8 @@ const ManageCoordinators = () => {
     setLoading(true);
     try {
       const response = await API.get('/api/hod/coordinators');
-      setCoordinators(response.data || []);
+      const data = response.data || response || [];
+      setCoordinators(Array.isArray(data) ? data : []);
     } catch (err) {
       toast.error("Failed to fetch coordinators");
       setCoordinators([]);
@@ -112,9 +113,9 @@ const ManageCoordinators = () => {
 
   const filtered = coordinators.filter(
     (c) =>
-      c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.department.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase())
+      (c.full_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (c.department?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (c.email?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   return (

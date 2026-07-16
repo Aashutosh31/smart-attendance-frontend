@@ -34,7 +34,8 @@ const ManageFaculty = () => {
     setLoading(true);
     try {
       const response = await API.get('/api/hod/faculty');
-      setFacultyList(response.data || []);
+      const data = response.data || response || [];
+      setFacultyList(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to fetch faculty data");
       setFacultyList([]);
@@ -61,8 +62,9 @@ const handleAddFaculty = async (e) => {
   setLoading(true);
   try {
     await API.post('/api/hod/faculty', {
-      fullName: formData.fullName,
+      name: formData.fullName,
       email: formData.email,
+      department: profile.department,
       subjects: formData.subjects.split(",").map((s) => s.trim()),
       password: formData.password
     });
@@ -99,9 +101,9 @@ const handleAddFaculty = async (e) => {
 
   const filtered = facultyList.filter(
     (f) =>
-      f.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      f.department.toLowerCase().includes(search.toLowerCase()) ||
-      f.email.toLowerCase().includes(search.toLowerCase())
+      (f.full_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (f.department?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (f.email?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   return (

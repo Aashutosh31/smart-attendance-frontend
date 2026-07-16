@@ -26,7 +26,8 @@ const ManageCoursesPage = () => {
   const fetchFaculty = async () => {
     try {
       const response = await API.get('/api/hod/faculty'); // Assuming this is available at HOD level
-      setFacultyList(response.data || []);
+      const data = response.data || response || [];
+      setFacultyList(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error(error.message);
     } finally {
