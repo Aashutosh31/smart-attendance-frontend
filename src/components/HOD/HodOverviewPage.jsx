@@ -165,7 +165,6 @@ const HodOverviewPage = () => {
           value={stats.totalCourses}
           icon={BookOpen}
           color="from-blue-500 to-blue-600"
-          trend={15.3}
           subtitle="Active courses"
         />
         <StatCard
@@ -173,7 +172,6 @@ const HodOverviewPage = () => {
           value={stats.totalCoordinators}
           icon={UserPlus2}
           color="from-emerald-500 to-emerald-600"
-          trend={8.7}
           subtitle="Course coordinators"
         />
         <StatCard
@@ -181,7 +179,6 @@ const HodOverviewPage = () => {
           value={stats.totalStudents}
           icon={GraduationCap}
           color="from-purple-500 to-purple-600"
-          trend={12.1}
           subtitle="Enrolled students"
         />
         <StatCard
@@ -189,7 +186,6 @@ const HodOverviewPage = () => {
           value={stats.pendingVerifications}
           icon={ClipboardCheck}
           color="from-orange-500 to-orange-600"
-          trend={-25.4}
           subtitle="Awaiting approval"
         />
       </div>

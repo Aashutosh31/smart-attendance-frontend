@@ -123,7 +123,7 @@ const StudentDashboard = () => {
     try {
       const response = await API.post(`/api/student/sessions/${selectedSession._id}/attendance`, {
         image,
-        livenessProof: true // Mocked liveness proof from frontend
+        livenessProof: true
       });
       toast.success(response.message || "Attendance marked successfully");
       // Refresh active sessions

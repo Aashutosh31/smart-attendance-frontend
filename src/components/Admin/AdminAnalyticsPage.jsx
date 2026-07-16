@@ -213,7 +213,6 @@ useEffect(() => {
           value={analytics.totalUsers}
           icon={Users}
           color="from-blue-500 to-blue-600"
-          trend={12.5}
           subtitle="Active accounts"
         />
         <StatCard
@@ -221,7 +220,6 @@ useEffect(() => {
           value={analytics.totalStudents}
           icon={GraduationCap}
           color="from-emerald-500 to-emerald-600"
-          trend={8.2}
           subtitle="Enrolled students"
         />
         <StatCard
@@ -229,7 +227,6 @@ useEffect(() => {
           value={analytics.totalFaculty}
           icon={UserCheck}
           color="from-purple-500 to-purple-600"
-          trend={3.1}
           subtitle="Teaching staff"
         />
         <StatCard
@@ -237,7 +234,6 @@ useEffect(() => {
           value={`${analytics.attendanceRate}%`}
           icon={TrendingUp}
           color="from-orange-500 to-orange-600"
-          trend={2.3}
           subtitle="Overall average"
         />
       </div>
@@ -393,65 +389,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Performance Metrics */}
-      <div className={`p-6 rounded-2xl transition-all duration-300 ${
-        darkMode 
-          ? 'bg-slate-800/50 border border-slate-700/50' 
-          : 'bg-white/70 border border-slate-200/50'
-      } backdrop-blur-sm shadow-xl`}>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <Zap className={`w-6 h-6 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-            <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-              Quick Insights
-            </h2>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className={`text-center p-4 rounded-xl ${
-            darkMode ? 'bg-emerald-900/20 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'
-          }`}>
-            <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <h3 className={`text-2xl font-bold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-              +15%
-            </h3>
-            <p className={`${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
-              Student Growth
-            </p>
-          </div>
-          
-          <div className={`text-center p-4 rounded-xl ${
-            darkMode ? 'bg-blue-900/20 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'
-          }`}>
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <h3 className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              98.5%
-            </h3>
-            <p className={`${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-              System Uptime
-            </p>
-          </div>
-          
-          <div className={`text-center p-4 rounded-xl ${
-            darkMode ? 'bg-purple-900/20 border border-purple-500/20' : 'bg-purple-50 border border-purple-200'
-          }`}>
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h3 className={`text-2xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-              4.9/5
-            </h3>
-            <p className={`${darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-              User Satisfaction
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Performance Metrics (Removed Static Data) */}
     </div>
   );
 };

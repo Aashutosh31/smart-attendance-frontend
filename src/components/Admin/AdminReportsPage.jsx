@@ -333,7 +333,7 @@ useEffect(() => {
                       </div>
                       <div>
                         <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                          45
+                          {reports.attendanceReports?.length || 0}
                         </h3>
                         <p className={`${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                           Total Reports
@@ -351,7 +351,9 @@ useEffect(() => {
                       </div>
                       <div>
                         <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                          87.5%
+                          {reports.departmentStats?.length > 0 
+                            ? (reports.departmentStats.reduce((sum, d) => sum + d.attendance, 0) / reports.departmentStats.length).toFixed(1)
+                            : 0}%
                         </h3>
                         <p className={`${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                           Avg Attendance
@@ -369,7 +371,7 @@ useEffect(() => {
                       </div>
                       <div>
                         <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                          12
+                          {reports.attendanceReports?.length || 0}
                         </h3>
                         <p className={`${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                           This Month

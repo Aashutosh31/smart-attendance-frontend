@@ -19,14 +19,37 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
   </div>
 );
 
-const ChartPlaceholder = ({ title }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">{title}</h4>
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <BarChart className="w-12 h-12 text-gray-300" />
+const AttendanceChart = ({ data }) => {
+    if (!data || data.length === 0) return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Attendance Trend (Semester)</h4>
+            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+                <BarChart className="w-12 h-12 text-gray-300" />
+            </div>
         </div>
-    </div>
-);
+    );
+    return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Attendance Trend (Semester)</h4>
+            <div className="h-64 flex items-end justify-between px-2 pt-4">
+                {data.map((item, index) => (
+                    <div key={index} className="flex flex-col items-center w-1/8">
+                        <div className="relative flex justify-center w-full group">
+                            <div 
+                                className="w-12 bg-blue-500 rounded-t-sm hover:bg-blue-600 transition-colors" 
+                                style={{ height: `${item.percentage * 2}px` }}
+                            ></div>
+                            <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2">
+                                {item.percentage}%
+                            </div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-2">{item.day}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const CoordinatorAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -73,7 +96,7 @@ const CoordinatorAnalytics = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder title="Attendance Trend (Semester)" />
+        <AttendanceChart data={analytics?.attendanceTrend} />
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <h4 className="text-lg font-semibold text-gray-900 p-6 border-b">Students with Low Attendance</h4>

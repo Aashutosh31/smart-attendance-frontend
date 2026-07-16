@@ -48,12 +48,6 @@ import AddStudentPage from "./components/Coordinator/AddStudentPage.jsx";
 import CoordinatorAttendancePage from "./components/Coordinator/CoordinatorAttendancePage.jsx";
 import CoordinatorAnalytics from "./components/Coordinator/CoordinatorAnalytics.jsx";
 
-// --- VERIFICATION PAGES ---
-import AdminVerificationPage from "./components/Admin/AdminVerificationPage.jsx";
-import HodVerificationPage from "./components/HOD/HodVerificationPage.jsx";
-import FacultyVerificationPage from "./components/Faculty/FacultyVerificationPage.jsx";
-import StudentVerificationPage from "./components/Student/StudentVerificationPage.jsx";
-
 // --- SHARED PAGES ---
 import SettingsPage from "./components/Shared/SettingsPage.jsx";
 
@@ -73,7 +67,7 @@ function App() {
           <Route path="/register-college" element={<CollegeRegistrationPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           
-          {/* --- THE FIX: YEH NAYA ROUTE ADD KIYA GAYA HAI --- */}
+          {/* --- FACE ENROLLMENT ROUTE --- */}
           <Route
             path="/enroll-face"
             element={
@@ -100,8 +94,6 @@ function App() {
             <Route path="view-students" element={<ViewStudents />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
-          <Route path="/admin/verify" element={<ProtectedRoute allowedRoles={['admin']}><AdminVerificationPage /></ProtectedRoute>} />
-          
           {/* 2. HOD Routes */}
           <Route path="/hod" element={<ProtectedRoute allowedRoles={['hod']}><HodDashboard /></ProtectedRoute>}>
             <Route path="overview" element={<HodOverviewPage />} />
@@ -114,8 +106,6 @@ function App() {
             <Route path="faculty-attendance" element={<FacultyAttendancePage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
-          <Route path="/hod/verify" element={<ProtectedRoute allowedRoles={['hod']}><HodVerificationPage /></ProtectedRoute>} />
-          
           {/* 3. Faculty Routes */}
           <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>}>
             <Route path="overview" element={<DashboardOverview />} />
@@ -123,12 +113,8 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
-          <Route path="/faculty/verify" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyVerificationPage /></ProtectedRoute>} />
-          
           {/* 4. Student Routes */}
           <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
-          <Route path="/student/verify" element={<ProtectedRoute allowedRoles={['student']}><StudentVerificationPage /></ProtectedRoute>} />
-          
           {/* 5. Program Coordinator Routes */}
           <Route path="/coordinator" element={<ProtectedRoute allowedRoles={['coordinator']}><ProgramCoordinatorDashboard /></ProtectedRoute>}>
             <Route index element={<AddStudentPage />} />
