@@ -35,20 +35,7 @@ const ManageCoordinators = () => {
         Loading profile...
       </div>
     );
-  if (!profile.college_id)
-    return (
-      <div className="flex justify-center items-center h-screen text-center text-red-600 dark:text-red-400 px-4">
-        <div>
-          <p className="font-semibold text-2xl mb-2">
-            Invalid college information.
-          </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500">
-            Please contact an administrator.<br />
-            (college_id missing in your profile)
-          </p>
-        </div>
-      </div>
-    );
+
 
   const fetchCoordinators = useCallback(async () => {
     setLoading(true);

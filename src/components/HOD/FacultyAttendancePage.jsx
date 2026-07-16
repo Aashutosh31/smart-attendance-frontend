@@ -19,7 +19,8 @@ const FacultyAttendancePage = () => {
       setIsLoading(true);
       try {
         const response = await API.get('/api/hod/faculty-attendance/today');
-        setFacultyAttendanceList(response.data);
+        const data = response.data || response || [];
+        setFacultyAttendanceList(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch faculty attendance:", error);
       } finally {

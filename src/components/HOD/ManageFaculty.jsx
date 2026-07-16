@@ -23,12 +23,7 @@ const ManageFaculty = () => {
     return <div className="text-center py-20 text-red-600 dark:text-red-400 font-semibold">Not authenticated. Please login.</div>;
   if (!profile)
     return <div className="text-center py-20 text-gray-600 dark:text-gray-400">Loading profile...</div>;
-  if (!profile.college_id)
-    return (
-      <div className="text-center py-20 text-red-600 dark:text-red-400 font-medium">
-        Invalid college information. Please contact admin.
-      </div>
-    );
+
 
   const fetchFaculty = useCallback(async () => {
     setLoading(true);
