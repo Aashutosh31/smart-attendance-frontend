@@ -67,7 +67,7 @@ const StudentDashboard = () => {
         });
 
         if (response.ok) {
-          const data = await response.json();
+          const { data } = await response.json();
           setAttendance(data);
 
           // Calculate stats
@@ -129,7 +129,7 @@ const StudentDashboard = () => {
           }
         });
         if (response.ok) {
-          const data = await response.json();
+          const { data } = await response.json();
           setActiveSessions(data);
         }
       } catch (error) {

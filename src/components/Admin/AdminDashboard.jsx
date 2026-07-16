@@ -8,6 +8,7 @@ import {
   Users, 
   UserCheck, 
   Building, 
+  GraduationCap,
   LogOut, 
   Settings, 
   Sun, 
@@ -59,6 +60,7 @@ const AdminDashboard = () => {
   const navLinks = [
     { icon: BarChart3, text: 'Analytics', path: '/admin/analytics', color: 'from-blue-500 to-cyan-500' },
     { icon: FileText, text: 'Reports', path: '/admin/reports', color: 'from-emerald-500 to-teal-500' },
+    { icon: GraduationCap, text: 'Academics', path: '/admin/academic', color: 'from-orange-500 to-amber-500' },
     { icon: Building, text: 'Manage HODs', path: '/admin/manage-hods', color: 'from-purple-500 to-indigo-500' },
     { icon: Users, text: 'View Students', path: '/admin/view-students', color: 'from-pink-500 to-rose-500' },
     { icon: Settings, text: 'Settings', path: '/admin/settings', color: 'from-slate-500 to-slate-600' },

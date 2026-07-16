@@ -13,8 +13,11 @@ import {
   Save
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import useSocket from '../../hooks/useSocket';
+import { useAuthStore } from '../../store/AuthStore';
 
 const CoordinatorAttendancePage = () => {
+  const { session } = useAuthStore();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,9 +27,24 @@ const CoordinatorAttendancePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Hook into realtime attendance stream for the selected course
+  const { liveAttendance } = useSocket(selectedCourse);
+
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  // Listen for live attendance events and update UI instantly
+  useEffect(() => {
+    if (liveAttendance.length > 0) {
+      const latest = liveAttendance[0];
+      setAttendance(prev => ({
+        ...prev,
+        [latest.studentId]: latest.status
+      }));
+      toast.success(`${latest.studentName} marked attendance as ${latest.status}!`);
+    }
+  }, [liveAttendance]);
 
   useEffect(() => {
     if (selectedCourse && selectedDate) {
@@ -36,22 +54,17 @@ const CoordinatorAttendancePage = () => {
 
   const fetchInitialData = async () => {
     try {
-      // Replace with actual API calls
-      setCourses([
-        { id: 1, name: 'Advanced React Development', code: 'CS-301' },
-        { id: 2, name: 'Database Systems', code: 'CS-205' },
-        { id: 3, name: 'Web Security', code: 'CS-401' },
-      ]);
-      
-      setStudents([
-        { id: 1, name: 'John Doe', rollNumber: 'CS2021001', email: 'john@example.com' },
-        { id: 2, name: 'Jane Smith', rollNumber: 'CS2021002', email: 'jane@example.com' },
-        { id: 3, name: 'Mike Johnson', rollNumber: 'CS2021003', email: 'mike@example.com' },
-        { id: 4, name: 'Sarah Wilson', rollNumber: 'CS2021004', email: 'sarah@example.com' },
-        { id: 5, name: 'David Brown', rollNumber: 'CS2021005', email: 'david@example.com' },
-      ]);
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      if (response.ok) {
+        const { data } = await response.json();
+        setCourses(data.map(c => ({ id: c._id, name: c.name, code: c.code || 'CODE' })));
+      }
     } catch (error) {
-      toast.error('Failed to fetch data');
+      toast.error('Failed to fetch courses');
     } finally {
       setIsLoading(false);
     }
@@ -59,12 +72,28 @@ const CoordinatorAttendancePage = () => {
 
   const fetchAttendanceData = async () => {
     try {
-      // Replace with actual API call to fetch existing attendance
-      const existingAttendance = {};
-      students.forEach(student => {
-        existingAttendance[student.id] = Math.random() > 0.3 ? 'present' : 'absent';
-      });
-      setAttendance(existingAttendance);
+      const [studentsRes, attendanceRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/students`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        }),
+        fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/attendance?date=${selectedDate}`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
+      ]);
+
+      if (studentsRes.ok && attendanceRes.ok) {
+        const studentsData = await studentsRes.json();
+        const attendanceData = await attendanceRes.json();
+        
+        setStudents(studentsData.data.map(s => ({
+          id: s._id,
+          name: s.name,
+          email: s.email,
+          rollNumber: s.role || 'N/A' // Map to correct field if exists
+        })));
+        
+        setAttendance(attendanceData.data);
+      }
     } catch (error) {
       toast.error('Failed to fetch attendance data');
     }
@@ -85,9 +114,24 @@ const CoordinatorAttendancePage = () => {
 
     setIsSaving(true);
     try {
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success('Attendance saved successfully!');
+      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/attendance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          attendanceMap: attendance
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Attendance saved successfully!');
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to save attendance');
+      }
     } catch (error) {
       toast.error('Failed to save attendance');
     } finally {

@@ -36,6 +36,7 @@ import ViewStudents from "./components/Admin/ViewStudents.jsx";
 import ManageHods from "./components/Admin/ManageHods.jsx";
 import AdminReportsPage from "./components/Admin/AdminReportsPage.jsx";
 import AdminAnalyticsPage from "./components/Admin/AdminAnalyticsPage.jsx";
+import AcademicManagement from './components/Admin/AcademicManagement';
 
 // --- FACULTY SPECIFIC PAGES ---
 import DashboardOverview from "./components/Faculty/DashboardOverview.jsx";
@@ -86,11 +87,17 @@ function App() {
           <Route path="/" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
 
           {/* 1. Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>}>
-            <Route path="view-students" element={<ViewStudents />} />
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/admin/analytics" replace />} />
+            <Route path="analytics" element={<AdminAnalyticsPage />} />
+            <Route path="academic" element={<AcademicManagement />} />
             <Route path="manage-hods" element={<ManageHods />} />
             <Route path="reports" element={<AdminReportsPage />} />
-            <Route path="analytics" element={<AdminAnalyticsPage />} />
+            <Route path="view-students" element={<ViewStudents />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="/admin/verify" element={<ProtectedRoute allowedRoles={['admin']}><AdminVerificationPage /></ProtectedRoute>} />
