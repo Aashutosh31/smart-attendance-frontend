@@ -42,13 +42,25 @@ const FaceRecognitionModal = ({
     };
 
     const handleCapture = async () => {
+        if (!videoRef.current) return;
         setIsProcessing(true);
-        // Simulate recognition
-        setTimeout(() => {
-            setIsProcessing(false);
-            onSuccess();
+        
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+            const image = canvas.toDataURL('image/jpeg');
+            
+            await onSuccess(image);
             onClose();
-        }, 2000);
+        } catch (error) {
+            console.error("Capture error:", error);
+            toast.error(error.message || "Failed to process face image");
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (!isOpen) return null;

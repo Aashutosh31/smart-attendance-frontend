@@ -147,14 +147,16 @@ const StudentDashboard = () => {
     setAttendanceModalOpen(true);
   };
 
-  const handleAttendanceSuccess = async () => {
+  const handleAttendanceSuccess = async (image) => {
     if (!selectedSession) return;
     try {
       const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/sessions/${selectedSession._id}/mark-attendance`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image })
       });
       const data = await response.json();
       if (response.ok) {
