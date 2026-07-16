@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-import { supabase } from "../../supabaseClient";
+import API from "../../utils/api";
 import { useAuthStore } from "../../store/AuthStore";
 
 const ManageFaculty = () => {
@@ -33,19 +33,15 @@ const ManageFaculty = () => {
   const fetchFaculty = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("faculty")
-        .select("*")
-        .eq("college_id", profile.college_id);
-      if (error) throw error;
-      setFacultyList(data ?? []);
+      const response = await API.get('/api/hod/faculty');
+      setFacultyList(response.data || []);
     } catch (error) {
       toast.error("Failed to fetch faculty data");
       setFacultyList([]);
     } finally {
       setLoading(false);
     }
-  }, [profile.college_id]);
+  }, []);
 
   useEffect(() => {
     fetchFaculty();
@@ -64,33 +60,12 @@ const handleAddFaculty = async (e) => {
   }
   setLoading(true);
   try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    await API.post('/api/hod/faculty', {
+      fullName: formData.fullName,
       email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          full_name: formData.fullName,
-          subjects: formData.subjects.split(",").map((s) => s.trim()),
-          role: "faculty",
-          college_id: profile.college_id,
-          department: profile.department, // Set from HOD's department here
-        },
-      },
+      subjects: formData.subjects.split(",").map((s) => s.trim()),
+      password: formData.password
     });
-    if (authError || !authData?.user?.id) throw authError || new Error("Signup failed");
-
-    const { error: insertError } = await supabase.from("faculty").insert([
-      {
-        id: authData.user.id,
-        full_name: formData.fullName,
-        email: formData.email,
-        subjects: formData.subjects.split(",").map((s) => s.trim()),
-        college_id: profile.college_id,
-        department: profile.department, // Set from HOD's department here also
-        created_by: profile.id,
-      },
-    ]);
-    if (insertError) throw insertError;
 
     toast.success("Faculty added successfully! Please verify their email.");
     setFormData({
@@ -112,12 +87,11 @@ const handleAddFaculty = async (e) => {
     if (!window.confirm(`Are you sure to delete "${fullName}"?`)) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("faculty").delete().eq("id", id);
-      if (error) throw error;
+      await API.delete(`/api/hod/faculty/${id}`);
       toast.success("Faculty deleted.");
       fetchFaculty();
-    } catch {
-      toast.error("Failed to delete faculty.");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete faculty.");
     } finally {
       setLoading(false);
     }

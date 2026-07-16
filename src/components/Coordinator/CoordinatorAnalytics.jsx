@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
+import API from '../../utils/api';
 import { BarChart, Users, UserX, TrendingUp, AlertTriangle, Download } from 'lucide-react';
 
 // Reusable components for UI consistency
@@ -37,12 +38,8 @@ const CoordinatorAnalytics = () => {
       setIsLoading(true);
       try {
         // Backend team needs to create this endpoint
-        const response = await fetch('import.meta.env.VITE_API_HOST/api/coordinator/analytics', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Failed to fetch analytics data.');
-        const data = await response.json();
-        setAnalytics(data);
+        const response = await API.get('/api/coordinator/analytics');
+        setAnalytics(response.data || response);
       } catch (error) {
         toast.error(error.message);
       } finally {

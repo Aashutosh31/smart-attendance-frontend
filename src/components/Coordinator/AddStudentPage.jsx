@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../supabaseClient";
+import API from "../../utils/api";
 import { useAuthStore } from "../../store/AuthStore";
 import { toast } from "react-toastify";
 
@@ -26,13 +26,10 @@ const AddStudentPage = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("students")
-        .select("*")
-        .eq("college_id", profile.college_id)
-        .eq("department", profile.department);
-      if (error) throw error;
-      setStudents(data || []);
+      const response = await API.get(
+        `/api/coordinator/students?college_id=${profile.college_id}&department=${profile.department}`
+      );
+      setStudents(response.data || response || []);
     } catch (error) {
       toast.error("Failed to fetch students");
     }
@@ -50,40 +47,17 @@ const AddStudentPage = () => {
     }
     setLoading(true);
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      await API.post("/api/coordinator/students", {
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            gender: formData.gender,
-            role: "student",
-            department: profile.department,
-            college_id: profile.college_id,
-            enrollment_number: formData.enrollmentNumber,
-          },
-        },
+        fullName: formData.fullName,
+        gender: formData.gender,
+        department: profile.department,
+        collegeId: profile.college_id,
+        enrollmentNumber: formData.enrollmentNumber,
       });
-      if (authError || !authData?.user?.id)
-        throw authError || new Error("Signup failed");
 
-      // Insert into students table
-      const { error: insertError } = await supabase.from("students").insert([
-        {
-          id: authData.user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          enrollment_number: formData.enrollmentNumber,
-          gender: formData.gender,
-          department: profile.department,
-          college_id: profile.college_id,
-          created_by: profile.id,
-        },
-      ]);
-      if (insertError) throw insertError;
-
-      toast.success("Student added successfully! Please verify email.");
+      toast.success("Student added successfully!");
       setFormData({
         fullName: "",
         email: "",

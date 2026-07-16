@@ -22,6 +22,7 @@ import {
   Activity,
   PlayCircle
 } from 'lucide-react';
+import API from '../../utils/api';
 
 const StudentDashboard = () => {
   const [activeSessions, setActiveSessions] = useState([]);
@@ -44,7 +45,6 @@ const StudentDashboard = () => {
   const { signOut, profile } = useAuthStore();
   const user = profile;
 
-  // Get token from auth store if available
   const token = useAuthStore.getState().session?.access_token || useAuthStore.getState().token;
 
   useEffect(() => {
@@ -60,62 +60,37 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/me/attendance`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const response = await API.get('/api/student/me/attendance');
+        const data = response.data || [];
+        setAttendance(data);
+
+        // Calculate stats
+        const totalClasses = data.length;
+        const presentCount = data.filter(record => record.status === 'present').length;
+        const absentCount = totalClasses - presentCount;
+        const attendancePercentage = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : 0;
+
+        // Calculate streak (consecutive present days)
+        let streak = 0;
+        for (let i = data.length - 1; i >= 0; i--) {
+          if (data[i].status === 'present') {
+            streak++;
+          } else {
+            break;
           }
-        });
-
-        if (response.ok) {
-          const { data } = await response.json();
-          setAttendance(data);
-
-          // Calculate stats
-          const totalClasses = data.length;
-          const presentCount = data.filter(record => record.status === 'present').length;
-          const absentCount = totalClasses - presentCount;
-          const attendancePercentage = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : 0;
-
-          // Calculate streak (consecutive present days)
-          let streak = 0;
-          for (let i = data.length - 1; i >= 0; i--) {
-            if (data[i].status === 'present') {
-              streak++;
-            } else {
-              break;
-            }
-          }
-
-          setStats({
-            totalClasses,
-            presentCount,
-            absentCount,
-            attendancePercentage,
-            streak,
-            gpa: 3.8 // Mock GPA - replace with real data
-          });
-        } else {
-          throw new Error("Failed to fetch attendance");
         }
-      } catch (error) {
-        // Mock data for demo
-        const mockData = [
-          { id: 1, date: '2024-01-20', courseName: 'Advanced React', status: 'present' },
-          { id: 2, date: '2024-01-19', courseName: 'Database Systems', status: 'present' },
-          { id: 3, date: '2024-01-18', courseName: 'Machine Learning', status: 'absent' },
-          { id: 4, date: '2024-01-17', courseName: 'Web Security', status: 'present' },
-          { id: 5, date: '2024-01-16', courseName: 'Advanced React', status: 'present' },
-        ];
 
-        setAttendance(mockData);
         setStats({
-          totalClasses: 5,
-          presentCount: 4,
-          absentCount: 1,
-          attendancePercentage: 80,
-          streak: 2,
-          gpa: 9.8
+          totalClasses,
+          presentCount,
+          absentCount,
+          attendancePercentage,
+          streak,
+          gpa: 3.8 // Mock GPA - replace with real data
         });
+      } catch (error) {
+        toast.error("Failed to fetch attendance");
+        setAttendance([]);
       } finally {
         setIsLoading(false);
       }
@@ -123,15 +98,8 @@ const StudentDashboard = () => {
 
     const fetchActiveSessions = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/me/active-sessions`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const { data } = await response.json();
-          setActiveSessions(data);
-        }
+        const response = await API.get('/api/student/sessions/active');
+        setActiveSessions(response.data || []);
       } catch (error) {
         console.error("Failed to fetch active sessions:", error);
       }
@@ -150,25 +118,16 @@ const StudentDashboard = () => {
   const handleAttendanceSuccess = async (image) => {
     if (!selectedSession) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/student/sessions/${selectedSession._id}/mark-attendance`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ image })
+      const response = await API.post(`/api/student/sessions/${selectedSession._id}/attendance`, {
+        image,
+        livenessProof: true // Mocked liveness proof from frontend
       });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(data.message);
-        // Refresh active sessions
-        const updatedSessions = activeSessions.filter(s => s._id !== selectedSession._id);
-        setActiveSessions(updatedSessions);
-      } else {
-        toast.error(data.message || "Failed to mark attendance.");
-      }
+      toast.success(response.message || "Attendance marked successfully");
+      // Refresh active sessions
+      const updatedSessions = activeSessions.filter(s => s._id !== selectedSession._id);
+      setActiveSessions(updatedSessions);
     } catch (error) {
-      toast.error("An error occurred.");
+      toast.error(error.message || "Failed to mark attendance.");
     }
   };
 

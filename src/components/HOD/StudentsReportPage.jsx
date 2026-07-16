@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../store/AuthStore.jsx';
 import { User, MoreHorizontal, Filter, Download } from 'lucide-react';
+import API from '../../utils/api';
 
 const TableSkeleton = () => (
   <div className="animate-pulse">
@@ -13,18 +13,14 @@ const TableSkeleton = () => (
 const StudentReportsPage = () => {
   const [studentReports, setStudentReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const token = useAuthStore((state) => state.token);
 
   useEffect(() => {
     const fetchStudentReports = async () => {
       setIsLoading(true);
       try {
         // Backend team needs to create this endpoint for the HOD
-        const response = await fetch('import.meta.env.VITE_API_HOST/api/hod/student-reports', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setStudentReports(data);
+        const response = await API.get('/api/hod/student-reports');
+        setStudentReports(response.data || []);
       } catch (error) {
         console.error("Failed to fetch student reports:", error);
       } finally {
@@ -32,7 +28,7 @@ const StudentReportsPage = () => {
       }
     };
     fetchStudentReports();
-  }, [token]);
+  }, []);
   
   // Helper to determine color for attendance percentage
   const getAttendanceColor = (percentage) => {

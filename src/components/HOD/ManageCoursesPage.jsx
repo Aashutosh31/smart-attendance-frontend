@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/AuthStore';
 import { toast } from 'react-toastify';
 import { Book, Plus, Trash2, Loader, Users } from 'lucide-react';
+import API from '../../utils/api';
 
 const ManageCoursesPage = () => {
   const [courses, setCourses] = useState([]);
@@ -11,17 +12,10 @@ const ManageCoursesPage = () => {
   const [facultyList, setFacultyList] = useState([]);
   const [isFacultyLoading, setIsFacultyLoading] = useState(true);
 
-  const token = useAuthStore((state) => state.session?.access_token);
-
   const fetchCourses = async () => {
-    if (!token) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to load courses.');
-      const data = await response.json();
-      setCourses(data);
+      const response = await API.get('/api/hod/courses');
+      setCourses(response.data || []);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -30,14 +24,9 @@ const ManageCoursesPage = () => {
   };
 
   const fetchFaculty = async () => {
-    if (!token) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/admin/faculty`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to load faculty.');
-      const data = await response.json();
-      setFacultyList(data);
+      const response = await API.get('/api/hod/faculty'); // Assuming this is available at HOD level
+      setFacultyList(response.data || []);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -48,7 +37,7 @@ const ManageCoursesPage = () => {
   useEffect(() => {
     fetchCourses();
     fetchFaculty();
-  }, [token]);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -57,28 +46,10 @@ const ManageCoursesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      toast.error('You must be logged in to create a course.');
-      return;
-    }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newCourse),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create course');
-      }
-
-      const createdCourse = await response.json();
+      const response = await API.post('/api/hod/courses', newCourse);
       toast.success('Course created successfully!');
-      setCourses([...courses, createdCourse]);
+      setCourses([...courses, response.data]);
       setNewCourse({ name: '', code: '', facultyId: '' }); // Reset form
     } catch (error) {
       toast.error(error.message);
@@ -86,13 +57,8 @@ const ManageCoursesPage = () => {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!token) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/courses/${courseId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to delete course.');
+      await API.delete(`/api/hod/courses/${courseId}`);
       setCourses(courses.filter(c => c.id !== courseId));
       toast.success('Course deleted successfully!');
     } catch (error) {

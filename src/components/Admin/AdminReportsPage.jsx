@@ -24,6 +24,7 @@ import {
   Award
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import API from '../../utils/api';
 
 // Optimized Pie Chart Component
 const CustomPieChart = ({ data, title, subtitle, colors, centerLabel }) => {
@@ -132,42 +133,33 @@ useEffect(() => {
   useEffect(() => {
     const fetchReports = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setReports({
-        attendanceReports: [
-          { id: 1, title: 'Monthly Attendance Summary', date: '2024-03-01', status: 'Generated', department: 'All', type: 'attendance' },
-          { id: 2, title: 'CS Department Attendance', date: '2024-02-28', status: 'Generated', department: 'Computer Science', type: 'attendance' },
-          { id: 3, title: 'Faculty Attendance Report', date: '2024-02-25', status: 'Pending', department: 'All', type: 'faculty' }
-        ],
-        departmentStats: [
-          { dept: 'Computer Science', students: 120, attendance: 92, reports: 15 },
-          { dept: 'Mechanical', students: 98, attendance: 85, reports: 12 },
-          { dept: 'Electrical', students: 85, attendance: 88, reports: 10 },
-          { dept: 'Civil', students: 47, attendance: 79, reports: 8 }
-        ],
-        facultyReports: [
-          { id: 1, name: 'Dr. Smith', dept: 'Computer Science', attendance: 95, classes: 24 },
-          { id: 2, name: 'Prof. Johnson', dept: 'Mechanical', attendance: 88, classes: 20 },
-          { id: 3, name: 'Dr. Davis', dept: 'Electrical', attendance: 92, classes: 22 }
-        ],
-        studentReports: [
-          { id: 1, name: 'Alice Johnson', dept: 'Computer Science', attendance: 94, semester: '6th' },
-          { id: 2, name: 'Bob Smith', dept: 'Mechanical', attendance: 87, semester: '4th' },
-          { id: 3, name: 'Carol Davis', dept: 'Electrical', attendance: 91, semester: '6th' }
-        ]
-      });
-      setLoading(false);
+      try {
+        const response = await API.get(`/api/admin/reports?dateRange=${dateRange}&filterBy=${filterBy}`);
+        setReports(response.data || {
+          attendanceReports: [],
+          departmentStats: [],
+          facultyReports: [],
+          studentReports: []
+        });
+      } catch (error) {
+        console.error('Failed to fetch reports:', error);
+        toast.error('Failed to fetch reports');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchReports();
   }, [dateRange, filterBy]);
 
-  const generateReport = (type) => {
-    toast.info(`Generating ${type} report...`);
-    setTimeout(() => {
+  const generateReport = async (type) => {
+    try {
+      toast.info(`Generating ${type} report...`);
+      await API.post('/api/admin/reports/generate', { type });
       toast.success(`${type} report generated successfully!`);
-    }, 2000);
+    } catch (error) {
+      toast.error(`Failed to generate ${type} report: ${error.message}`);
+    }
   };
 
   const tabs = [

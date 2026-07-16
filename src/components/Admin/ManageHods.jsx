@@ -1,7 +1,7 @@
 // File Path: src/components/Admin/ManageHods.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { supabase } from "../../supabaseClient";
+import API from '../../utils/api';
 import { 
   User, 
   Mail, 
@@ -58,29 +58,15 @@ const ManageHodsPage = () => {
   const { profile } = useAuthStore();
 
 const fetchHods = useCallback(async () => {
-  if (!profile?.college_id) {
-    console.error('No college_id found for current user');
-    setHods([]);
-    return;
-  }
-  
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'hod')
-      .eq('college_id', profile.college_id);  // Strictly filter by college_id
-
-    if (error) throw error;
-    
-    console.log(`Fetched ${data?.length || 0} HODs for college_id: ${profile.college_id}`);
-    setHods(data || []);
+    const response = await API.get('/api/admin/users/role/hod');
+    setHods(response.data || []);
   } catch (error) {
     console.error('Error fetching HODs:', error);
     toast.error('Failed to fetch HODs');
     setHods([]);
   }
-}, [profile?.college_id]);  // Depend on college_id specifically
+}, []);
 
 
 
@@ -98,30 +84,18 @@ const handleSubmit = async (e) => {
   if (formData.password !== formData.confirmPassword) {
     return toast.error("Passwords do not match!");
   }
-  
-  if (!profile?.college_id) {
-    return toast.error("Could not identify your college. Please refresh and try again.");
-  }
 
   setLoading(true);
   
   try {
-    const { data, error } = await supabase.auth.signUp({
+    await API.post('/api/admin/hod', {
+      name: formData.fullName,
       email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          full_name: formData.fullName,
-          role: 'hod',
-          department: formData.department,
-          college_id: profile.college_id  // Use current admin's college_id
-        }
-      }
+      department: formData.department,
+      password: formData.password
     });
 
-    if (error) throw error;
-
-    toast.success(`HOD added successfully to ${profile.college_name || 'your college'}!`);
+    toast.success('HOD added successfully!');
     setFormData({
       fullName: '',
       email: '',
@@ -146,13 +120,7 @@ const handleSubmit = async (e) => {
     if (!window.confirm(`Are you sure you want to delete ${hodName}?`)) return;
     
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', hodId);
-
-      if (error) throw error;
-      
+      await API.delete(`/api/admin/users/${hodId}`);
       toast.success('HOD deleted successfully!');
       fetchHods();
     } catch (error) {
@@ -161,20 +129,19 @@ const handleSubmit = async (e) => {
     }
   };
 
-  // Sorting and filtering logic
   const filteredAndSortedHods = hods
     .filter(hod => 
-      hod.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hod.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hod.department?.toLowerCase().includes(searchTerm.toLowerCase())
+      (hod.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (hod.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (hod.department?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
       let aValue, bValue;
       
       switch (sortBy) {
         case 'name':
-          aValue = a.full_name || '';
-          bValue = b.full_name || '';
+          aValue = a.name || '';
+          bValue = b.name || '';
           break;
         case 'email':
           aValue = a.email || '';
@@ -322,12 +289,12 @@ const handleSubmit = async (e) => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
                         <span className="text-white font-semibold text-sm">
-                          {(hod.full_name || 'U').charAt(0).toUpperCase()}
+                          {(hod.name || 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
                         <p className={`font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                          {hod.full_name || 'Unknown Name'}
+                          {hod.name || 'Unknown Name'}
                         </p>
                         <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                           Head of Department
@@ -385,7 +352,7 @@ const handleSubmit = async (e) => {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(hod.id, hod.full_name)}
+                        onClick={() => handleDelete(hod._id, hod.name)}
                         className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                           darkMode ? 'hover:bg-red-500/20 text-red-400 hover:text-red-300' : 'hover:bg-red-50 text-red-500 hover:text-red-700'
                         }`}

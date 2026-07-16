@@ -18,6 +18,7 @@ import {
   Filter,
   Sparkles
 } from 'lucide-react';
+import API from '../../utils/api';
 
 const AdminAnalyticsPage = () => {
   // Add this to EVERY page component (AdminReportsPage, ManageHods, etc.)
@@ -70,33 +71,23 @@ useEffect(() => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAnalytics({
-        totalUsers: 450,
-        totalStudents: 350,
-        totalFaculty: 45,
-        totalHODs: 12,
-        attendanceRate: 87.5,
-        departmentStats: [
-          { dept: 'Computer Science', students: 120, faculty: 15, attendance: 92, trend: 5.2 },
-          { dept: 'Mechanical', students: 98, faculty: 12, attendance: 85, trend: -2.1 },
-          { dept: 'Electrical', students: 85, faculty: 10, attendance: 88, trend: 3.4 },
-          { dept: 'Civil', students: 47, faculty: 8, attendance: 79, trend: 1.8 }
-        ],
-        monthlyTrends: [
-          { month: 'Jan', students: 320, attendance: 85 },
-          { month: 'Feb', students: 335, attendance: 87 },
-          { month: 'Mar', students: 350, attendance: 88 }
-        ],
-        recentActivity: [
-          { action: 'New student registered', time: '2 minutes ago', type: 'student' },
-          { action: 'Faculty added to CS dept', time: '1 hour ago', type: 'faculty' },
-          { action: 'HOD updated profile', time: '3 hours ago', type: 'hod' },
-          { action: 'Attendance report generated', time: '5 hours ago', type: 'report' }
-        ]
-      });
-      setLoading(false);
+      try {
+        const response = await API.get(`/api/admin/analytics?timeRange=${timeRange}`);
+        setAnalytics(response.data || {
+          totalUsers: 0,
+          totalStudents: 0,
+          totalFaculty: 0,
+          totalHODs: 0,
+          attendanceRate: 0,
+          departmentStats: [],
+          monthlyTrends: [],
+          recentActivity: []
+        });
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchAnalytics();

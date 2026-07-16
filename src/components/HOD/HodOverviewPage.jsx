@@ -19,6 +19,7 @@ import {
   ClipboardCheck,
   BarChart3
 } from 'lucide-react';
+import API from '../../utils/api';
 
 const HodOverviewPage = () => {
   const [stats, setStats] = useState({
@@ -47,27 +48,21 @@ const HodOverviewPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setStats({
-        totalCourses: 12,
-        totalCoordinators: 8,
-        totalStudents: 245,
-        pendingVerifications: 3,
-        courseStats: [
-          { course: 'Computer Networks', students: 45, coordinator: 'Dr. Smith', status: 'active' },
-          { course: 'Data Structures', students: 52, coordinator: 'Prof. Johnson', status: 'active' },
-          { course: 'Operating Systems', students: 38, coordinator: 'Dr. Davis', status: 'pending' },
-          { course: 'Database Systems', students: 41, coordinator: 'Prof. Wilson', status: 'active' }
-        ],
-        recentActivity: [
-          { action: 'New course "AI & ML" created', time: '2 hours ago', type: 'course' },
-          { action: 'Coordinator assigned to "Web Development"', time: '4 hours ago', type: 'coordinator' },
-          { action: 'Student verification approved', time: '6 hours ago', type: 'verification' },
-          { action: 'Course report generated', time: '1 day ago', type: 'report' }
-        ]
-      });
-      setLoading(false);
+      try {
+        const response = await API.get('/api/hod/overview-stats');
+        setStats(response.data || {
+          totalCourses: 0,
+          totalCoordinators: 0,
+          totalStudents: 0,
+          pendingVerifications: 0,
+          courseStats: [],
+          recentActivity: [],
+        });
+      } catch (error) {
+        console.error("Failed to fetch HOD overview stats:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchStats();

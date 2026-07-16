@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../store/AuthStore.jsx';
 import { User, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
+import API from '../../utils/api';
 
 const TableSkeleton = () => (
   <div className="animate-pulse">
@@ -13,17 +13,13 @@ const TableSkeleton = () => (
 const FacultyAttendancePage = () => {
   const [facultyAttendanceList, setFacultyAttendanceList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const token = useAuthStore((state) => state.session?.access_token);
 
   useEffect(() => {
     const fetchFacultyAttendance = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/hod/faculty-attendance/today`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        setFacultyAttendanceList(data);
+        const response = await API.get('/api/hod/faculty-attendance/today');
+        setFacultyAttendanceList(response.data);
       } catch (error) {
         console.error("Failed to fetch faculty attendance:", error);
       } finally {
@@ -31,7 +27,7 @@ const FacultyAttendancePage = () => {
       }
     };
     fetchFacultyAttendance();
-  }, [token]);
+  }, []);
 
   return (
     <div>

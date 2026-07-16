@@ -15,6 +15,7 @@ import {
 import { toast } from 'react-toastify';
 import useSocket from '../../hooks/useSocket';
 import { useAuthStore } from '../../store/AuthStore';
+import API from '../../utils/api';
 
 const CoordinatorAttendancePage = () => {
   const { session } = useAuthStore();
@@ -54,15 +55,9 @@ const CoordinatorAttendancePage = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-      if (response.ok) {
-        const { data } = await response.json();
-        setCourses(data.map(c => ({ id: c._id, name: c.name, code: c.code || 'CODE' })));
-      }
+      const response = await API.get('/api/coordinator/courses');
+      const data = response.data || response;
+      setCourses(data.map(c => ({ id: c._id, name: c.name, code: c.code || 'CODE' })));
     } catch (error) {
       toast.error('Failed to fetch courses');
     } finally {
@@ -73,27 +68,21 @@ const CoordinatorAttendancePage = () => {
   const fetchAttendanceData = async () => {
     try {
       const [studentsRes, attendanceRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/students`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        }),
-        fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/attendance?date=${selectedDate}`, {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        })
+        API.get(`/api/coordinator/courses/${selectedCourse}/students`),
+        API.get(`/api/coordinator/courses/${selectedCourse}/attendance?date=${selectedDate}`)
       ]);
 
-      if (studentsRes.ok && attendanceRes.ok) {
-        const studentsData = await studentsRes.json();
-        const attendanceData = await attendanceRes.json();
+      const studentsData = studentsRes.data || studentsRes;
+      const attendanceData = attendanceRes.data || attendanceRes;
         
-        setStudents(studentsData.data.map(s => ({
-          id: s._id,
-          name: s.name,
-          email: s.email,
-          rollNumber: s.role || 'N/A' // Map to correct field if exists
-        })));
+      setStudents(studentsData.map(s => ({
+        id: s._id,
+        name: s.name,
+        email: s.email,
+        rollNumber: s.role || 'N/A' // Map to correct field if exists
+      })));
         
-        setAttendance(attendanceData.data);
-      }
+      setAttendance(attendanceData);
     } catch (error) {
       toast.error('Failed to fetch attendance data');
     }
@@ -114,26 +103,14 @@ const CoordinatorAttendancePage = () => {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/coordinator/courses/${selectedCourse}/attendance`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          date: selectedDate,
-          attendanceMap: attendance
-        })
+      await API.post(`/api/coordinator/courses/${selectedCourse}/attendance`, {
+        date: selectedDate,
+        attendanceMap: attendance
       });
 
-      if (response.ok) {
-        toast.success('Attendance saved successfully!');
-      } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to save attendance');
-      }
+      toast.success('Attendance saved successfully!');
     } catch (error) {
-      toast.error('Failed to save attendance');
+      toast.error(error.message || 'Failed to save attendance');
     } finally {
       setIsSaving(false);
     }

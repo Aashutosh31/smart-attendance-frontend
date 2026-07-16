@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../../store/AuthStore.jsx';
 import { toast } from 'react-toastify';
 import { User, Filter, Download, CheckCircle, XCircle } from 'lucide-react';
+import API from '../../utils/api';
 
 const TableSkeleton = () => (
   <div className="animate-pulse">
@@ -18,7 +18,6 @@ const FacultyReportsPage = () => {
     startDate: '',
     endDate: new Date().toISOString().split('T')[0], // Default to today
   });
-  const token = useAuthStore((state) => state.token);
 
   useEffect(() => {
     const fetchFacultyReports = async () => {
@@ -27,12 +26,8 @@ const FacultyReportsPage = () => {
         const queryParams = new URLSearchParams(filters).toString();
         // --- BACKEND INTEGRATION ---
         // Backend team needs to create this endpoint for HOD reports
-        const response = await fetch(`import.meta.env.VITE_API_HOST/api/hod/faculty-reports?${queryParams}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('Could not fetch faculty reports.');
-        const data = await response.json();
-        setFacultyReports(data);
+        const response = await API.get(`/api/hod/faculty-reports?${queryParams}`);
+        setFacultyReports(response.data || []);
       } catch (error) {
         toast.error(error.message);
       } finally {
@@ -40,7 +35,7 @@ const FacultyReportsPage = () => {
       }
     };
     fetchFacultyReports();
-  }, [token, filters]);
+  }, [filters]);
   
   const handleFilterChange = (e) => {
     setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));

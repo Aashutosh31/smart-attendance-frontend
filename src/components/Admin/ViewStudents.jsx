@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { supabase } from '../../supabaseClient';
+import API from '../../utils/api';
 import { useAuthStore } from '../../store/AuthStore.jsx';
 import { GraduationCap, Search, Users, Calendar } from 'lucide-react';
 
@@ -36,14 +36,8 @@ const ViewStudents = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'student')
-        .eq('college_id', collegeId);
-
-      if (error) throw error;
-      setStudents(data || []);
+      const response = await API.get(`/api/admin/students?college_id=${collegeId}`);
+      setStudents(response.data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast.error('Failed to fetch students.');

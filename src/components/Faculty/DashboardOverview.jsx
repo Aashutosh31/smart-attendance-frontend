@@ -9,6 +9,8 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import API from '../../utils/api';
+import { toast } from 'react-toastify';
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState({
@@ -22,23 +24,17 @@ const DashboardOverview = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
     const fetchData = async () => {
-      // Your existing API logic here
-      setStats({
-        totalStudents: 156,
-        totalCourses: 8,
-        attendanceRate: 87,
-        upcomingClasses: 3
-      });
-
-      setRecentActivities([
-        { id: 1, activity: 'New student enrolled', time: '2 hours ago', type: 'student' },
-        { id: 2, activity: 'Attendance marked for CS101', time: '4 hours ago', type: 'attendance' },
-        { id: 3, activity: 'Course material updated', time: '1 day ago', type: 'course' }
-      ]);
-
-      setLoading(false);
+      try {
+        const response = await API.get('/api/faculty/dashboard/stats');
+        setStats(response.data.stats);
+        setRecentActivities(response.data.recentActivities);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+        toast.error("Could not load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();

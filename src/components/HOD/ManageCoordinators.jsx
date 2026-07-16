@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
-import { supabase } from "../../supabaseClient";
+import API from "../../utils/api";
 import { useAuthStore } from "../../store/AuthStore";
 
 const ManageCoordinators = () => {
@@ -53,20 +53,15 @@ const ManageCoordinators = () => {
   const fetchCoordinators = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("coordinators")
-        .select("*")
-        .eq("college_id", profile.college_id);
-
-      if (error) throw error;
-      setCoordinators(data ?? []);
-    } catch {
+      const response = await API.get('/api/hod/coordinators');
+      setCoordinators(response.data || []);
+    } catch (err) {
       toast.error("Failed to fetch coordinators");
       setCoordinators([]);
     } finally {
       setLoading(false);
     }
-  }, [profile.college_id]);
+  }, []);
 
   useEffect(() => {
     fetchCoordinators();
@@ -83,31 +78,12 @@ const ManageCoordinators = () => {
     }
     setLoading(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      await API.post('/api/hod/coordinators', {
+        fullName: formData.fullName,
         email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            department: formData.department,
-            role: "coordinator",
-            college_id: profile.college_id,
-          },
-        },
+        department: formData.department,
+        password: formData.password
       });
-      if (authError || !authData?.user?.id) throw authError || new Error("Signup failed");
-
-      const { error: insertError } = await supabase.from("coordinators").insert([
-        {
-          id: authData.user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          department: formData.department,
-          college_id: profile.college_id,
-          created_by: profile.id,
-        },
-      ]);
-      if (insertError) throw insertError;
 
       toast.success("Coordinator added! Please verify their email.");
       setFormData({ fullName: "", email: "", department: "", password: "", confirmPassword: "" });
@@ -124,12 +100,11 @@ const ManageCoordinators = () => {
     if (!window.confirm(`Are you sure you want to delete "${fullName}"?`)) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("coordinators").delete().eq("id", id);
-      if (error) throw error;
+      await API.delete(`/api/hod/coordinators/${id}`);
       toast.success("Coordinator deleted.");
       fetchCoordinators();
-    } catch {
-      toast.error("Failed to delete coordinator");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete coordinator");
     } finally {
       setLoading(false);
     }
