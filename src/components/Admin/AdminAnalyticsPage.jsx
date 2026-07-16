@@ -192,7 +192,14 @@ useEffect(() => {
             <RefreshCw className="w-5 h-5" />
           </button>
           
-          <button className="px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:scale-105 transition-all duration-300 flex items-center space-x-2 shadow-lg">
+          <button 
+            onClick={() => {
+              toast.info('Exporting analytics...');
+              API.post('/api/admin/reports/generate', { type: 'Analytics' })
+                .then(() => toast.success('Analytics exported successfully!'))
+                .catch(err => toast.error('Export failed: ' + err.message));
+            }}
+            className="px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:scale-105 transition-all duration-300 flex items-center space-x-2 shadow-lg">
             <Download className="w-4 h-4" />
             <span>Export</span>
           </button>

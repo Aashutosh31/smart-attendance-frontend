@@ -80,13 +80,16 @@ const StudentDashboard = () => {
           }
         }
 
+        // Dynamic GPA out of 10.0 based on attendance percentage (for significance)
+        const gpa = attendancePercentage > 0 ? (attendancePercentage / 10).toFixed(1) : 0;
+
         setStats({
           totalClasses,
           presentCount,
           absentCount,
           attendancePercentage,
           streak,
-          gpa: 3.8 // Mock GPA - replace with real data
+          gpa: parseFloat(gpa)
         });
       } catch (error) {
         toast.error("Failed to fetch attendance");

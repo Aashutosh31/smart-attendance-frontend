@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/AuthStore';
 import { useNavigate } from 'react-router-dom';
+import API from '../../utils/api';
 
 const FaceEnrollmentPage = () => {
   const videoRef = useRef(null);
@@ -52,17 +53,7 @@ const FaceEnrollmentPage = () => {
     const image = canvas.toDataURL('image/jpeg');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_HOST}/api/auth/enroll-face`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ image }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Enrollment failed');
+      await API.post('/api/student/enroll-face', { images: [image] });
       
       alert('Face enrolled successfully!');
       updateFaceEnrollmentStatus(true);
